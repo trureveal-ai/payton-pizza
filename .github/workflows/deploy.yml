@@ -1,0 +1,59 @@
+name: Deploy beta
+
+# Builds main and publishes it as the BETA copy at /payton-pizza/beta/.
+# The live address (/payton-pizza/) keeps showing site/coming-soon until the
+# first live release (Phase 8), when this workflow starts publishing the game
+# there from the release tag.
+# GitHub Pages serves the gh-pages branch; this workflow is the only thing that writes to it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same setup as ci.yml. Keep the two in step.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Lint and unit tests
+        run: |
+          npm run lint
+          npm test
+
+      - name: Build
+        run: npm run build
+
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+
+      - name: Publish beta and the coming-soon page
+        run: |
+          rm -rf pages/beta
+          cp -r dist pages/beta
+          cp site/coming-soon/index.html pages/index.html
+          touch pages/.nojekyll
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Nothing changed."; exit 0; fi
+          git commit -m "Deploy beta from ${GITHUB_SHA::7} (v$(tr -d '[:space:]' < ../VERSION))"
+          git push origin gh-pages

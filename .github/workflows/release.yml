@@ -1,0 +1,87 @@
+name: Release
+
+# Publishes a version when VERSION (or this workflow) changes on main: checks the
+# release notes and the changelog entry, runs the tests, then creates the git tag and
+# the GitHub Release from docs/releases/v<version>.md. If the tag already exists it
+# does nothing, so re-runs are safe.
+
+on:
+  push:
+    branches: [main]
+    paths: [VERSION, .github/workflows/release.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: v
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::VERSION must look like 1.2.3, got '$version'"; exit 1
+          fi
+          tag="v$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "notes=docs/releases/$tag.md" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$tag is already released; nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check release notes and changelog entry
+        if: steps.v.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          NOTES: ${{ steps.v.outputs.notes }}
+        run: |
+          test -s "$NOTES" || { echo "::error::Missing release notes: $NOTES"; exit 1; }
+          head -n1 "$NOTES" | grep -q '^# ' || { echo "::error::$NOTES must start with '# <title>'"; exit 1; }
+          grep -q "^## \[$VERSION\]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## [$VERSION]' entry"; exit 1; }
+
+      # Same setup and tests as ci.yml. Keep the two in step.
+      - uses: actions/setup-node@v4
+        if: steps.v.outputs.exists == 'false'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        if: steps.v.outputs.exists == 'false'
+        run: npm ci
+
+      - name: Tests must pass before releasing
+        if: steps.v.outputs.exists == 'false'
+        run: |
+          npm run lint
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - name: Create tag and GitHub Release
+        if: steps.v.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.v.outputs.tag }}
+          NOTES: ${{ steps.v.outputs.notes }}
+        run: |
+          title="$(head -n1 "$NOTES" | sed 's/^# *//')"
+          tail -n +2 "$NOTES" > "$RUNNER_TEMP/release-body.md"
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$title" \
+            --notes-file "$RUNNER_TEMP/release-body.md" --latest
+          echo "Published $TAG: $title"

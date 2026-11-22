@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup. Keep release.yml and deploy.yml in step with this.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Browser tests
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - name: No secrets, user data or build output committed
+        run: |
+          bad=$(git ls-files | grep -E '^(dist|node_modules|test-results|playwright-report|_work|_build)/|(^|/)\.env|\.dev\.vars$|\.log$|(^|/)\.wrangler/' || true)
+          if [ -n "$bad" ]; then echo "::error::These files must not be committed:"; echo "$bad"; exit 1; fi
