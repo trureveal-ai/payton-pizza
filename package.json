@@ -1,0 +1,24 @@
+{
+  "name": "payton-pizza",
+  "private": true,
+  "type": "module",
+  "description": "Payton Pizza: an arcade pizza-delivery web game for phones and keyboards.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "lint": "eslint src tests",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm test && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.49.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}
