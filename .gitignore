@@ -1,0 +1,4 @@
+node_modules/
+.wrangler/
+*.png
+!_build/spike-0/site/spike-0/*.png
