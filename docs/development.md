@@ -14,7 +14,8 @@
 - Each version has a milestone (`v<x.y.z> — Phase <n>`) with its tasks as issues.
 - To release: close the milestone's issues and meet the gate; move the CHANGELOG entries to the new version; update README and ROADMAP; write `docs/releases/v<version>.md` and set `VERSION`; merge to `main`; close the milestone.
 - Nobody tags by hand. The Release workflow creates the tag and the GitHub Release.
-- `gh-pages` is written only by the Deploy workflow. `spike-0` holds the Phase 0 scratch work.
+- `gh-pages` is written only by workflows: Deploy for beta and the coming-soon page, and the `spike-3d` branch's own workflow for its test page.
+- `spike-0` holds the Phase 0 scratch work. `spike-3d` holds the 3D test page (scratch). `classic-2d` keeps the 2D game as released in v0.1.0.
 
 ## Tests
 
