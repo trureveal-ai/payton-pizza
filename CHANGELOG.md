@@ -5,10 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Planned for v0.2.0 (Phase 2): the move to 3D (a 3D street in simple shapes, one fixed camera, a wider street), seeded streets, the Gun-Metal Black Bimmer, new customer types, a bonus round, more hazards and a tuning pass.
+Planned for v0.2.0 (Phase 2): the move to 3D (a 3D street in simple shapes, one fixed camera, a wider street and view), forgiving tap-to-throw, seeded streets and the Gun-Metal Black Bimmer.
 
 ### Changed
-- The roadmap is now ten phases (0 to 9): the game goes 3D, with one added phase. The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
+- The roadmap is now eleven phases (0 to 10): the game goes 3D, and the gameplay work is split across Phases 2 and 3. Lives, Continue, extra-life pickups, ride perks, new customers and the bonus round are planned for v0.3.0. The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
 
 ## [0.1.0] - 2026-11-22 — Repo and walking skeleton
 
