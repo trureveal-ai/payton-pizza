@@ -40,6 +40,12 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **Ride perks, each ride keeping the ones below it:** hoverboard none; dirt bike rides over potholes; Gun-Metal Black Bimmer also knocks cones and trash cans aside (and, added in Phase 3, balls); Payton Pizza van also shrugs off dogs and skaters. Traffic and cars backing out hurt every ride.
 - **Phases:** the gameplay work is split in two (Phases 2 and 3), which makes eleven phases.
 
+## Decisions (2026-11-23, from Cam's playtest of the Phase 3 beta)
+
+- **Dogs:** he likes dogs chasing but not that they shadowed the ride, and wanted a way to stop them. A dog now runs at the ride briefly and then keeps to its line, and a pizza thrown its way sends it off. Running a dog over stays the van's perk.
+- **Perks:** he asked for a short description of each ride's perks. The garage cards and the shift banner now spell them out.
+- **Continue:** works as he expected, and he likes that the bank is not affected. Kept as built.
+
 ## The 2D version
 
 The 2D game is kept in case it is wanted later:

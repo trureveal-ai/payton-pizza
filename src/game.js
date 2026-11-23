@@ -1,5 +1,5 @@
 // Game rules: starting runs and shifts, throwing, delivering, crashing, and the per-step update.
-import { AHEAD, DOOR_HALF, H, HAND_R, HY0, HY1, LOT, MAX_LIVES, PIE_SPEED, RANGE, START_LIVES, SWL, SWR, VEH, W, WALL_L, WALL_R, WIN_HALF, YMAX, YMIN } from './config.js';
+import { AHEAD, DOG_CHASE, DOG_REACH, DOG_RUN, DOOR_HALF, H, HAND_R, HY0, HY1, LOT, MAX_LIVES, PIE_SPEED, RANGE, START_LIVES, SWL, SWR, VEH, W, WALL_L, WALL_R, WIN_HALF, YMAX, YMIN } from './config.js';
 import { chance, clamp, pick, rnd } from './util.js';
 import { G, P, Y } from './state.js';
 import { seed, shiftSeed } from './rng.js';
@@ -32,7 +32,7 @@ function begin(bonus){
   G.cam=0;P.x=P.tx=280;P.sy=P.ty=590;G.heat=100;G.streak=0;G.pizzas=G.V.cap;G.shieldLeft=bonus?0:G.V.shield;
   G.inv=0;G.stun=0;G.slip=0;G.shake=0;G.throwCd=0;G.throwAnim=0;G.lifeFlash=0;
   G.carT=rnd(1.5,3);G.slowT=rnd(3,5);G.skateT=rnd(4,8);G.bannerT=2.4;if(G.day===1&&!bonus)G.hintT=9;
-  G.stats={orders:orders,delivered:0,hand:0,door:0,smash:0,missed:0,tips:0,crashes:0,bonks:0};
+  G.stats={orders:orders,delivered:0,hand:0,door:0,smash:0,missed:0,tips:0,crashes:0,bonks:0,fed:0};G.dogTip=false;
   if(!bonus&&G.opt.day==null&&save.cont!==G.day){save.cont=G.day;writeSave();}   // where Continue picks up from
   G.state='play';
 }
@@ -82,9 +82,25 @@ export function throwPizza(side){
   // and a second pizza is not wasted on the same house.
   var a=aimAt(side);if(a.lot)a.lot.claim=G.step+50;
   if(!G.bonus)G.pizzas--;
+  feedDog(side);
   G.throwCd=0.2;G.throwAnim=0.18;G.throwDir=side;
   G.pies.push({x:P.x+side*10,y:G.cam+H-P.sy,vx:side*PIE_SPEED,vy:G.speed,d:0,side:side,rot:rnd(0,6)});
   sfx('throw');
+}
+// The dog that is after you on that side, if there is one close enough to go for a pizza.
+export function dogOn(side){
+  var py=G.cam+H-P.sy,best=null;
+  for(var i=0;i<G.obs.length;i++){var o=G.obs[i];
+    if(o.type!=='dog'||o.out||(o.st!==1&&o.st!==2))continue;
+    var dy=o.y-py;if(dy<-30||dy>DOG_REACH||(o.x-P.x)*side<-12)continue;
+    if(!best||o.y<best.y)best=o;}
+  return best;
+}
+// A pizza thrown a chasing dog's way: it runs after the pizza instead of you, and sits at the curb.
+function feedDog(side){
+  var o=dogOn(side);if(!o)return;
+  o.st=3;o.fs=side;G.stats.fed++;G.score+=25;sfx('bark');
+  pop(o.x,o.y,'FETCH!  +25','#9cf07a',15,34);
 }
 export function smartThrow(){
   var py=G.cam+H-P.sy,best=null,bd=1e9;
@@ -92,6 +108,7 @@ export function smartThrow(){
     var dy=l.doorY-py;if(dy<-40||dy>260)continue;
     var wall=l.side<0?WALL_L:WALL_R;if(Math.abs(P.x-wall)>RANGE+10)continue;
     var dd=Math.abs(dy-60);if(dd<bd){bd=dd;best=l;}}
+  if(!best){if(dogOn(-1)){throwPizza(-1);return;}if(dogOn(1)){throwPizza(1);return;}}
   throwPizza(best?best.side:(P.x<240?-1:1));
 }
 export function deliver(l,hand,p){
@@ -177,8 +194,14 @@ export function update(dt){
     }
     var sy=Y(o.y);
     if(o.type==='dog'){
-      if(o.st===0&&sy>230&&sy<H){o.st=1;sfx('bark');}
-      if(o.st===1){o.vy=G.speed*0.8;var dx=P.x-o.x;o.x+=clamp(dx,-125*dt,125*dt);o.x=clamp(o.x,118,362);}
+      if(o.st===0&&sy>230&&sy<H){o.st=1;o.ct=0;sfx('bark');
+        if(!G.dogTip&&G.V.perk.indexOf('dog')<0){G.dogTip=true;popScreen(W/2,250,'DOG!  THROW A PIZZA ITS WAY','#ffd23f',15);}}
+      if(o.st===1){   // it runs at you for a moment...
+        o.ct+=dt;o.vy=G.speed*0.45;o.x+=clamp(P.x-o.x,-DOG_RUN*dt,DOG_RUN*dt);o.x=clamp(o.x,118,362);
+        if(o.ct>=DOG_CHASE)o.st=2;
+      }
+      else if(o.st===2)o.vy=-25;   // ...then keeps to that line, so one swerve gets you past
+      else if(o.st===3){o.vy=0;o.x+=clamp((o.fs<0?120:360)-o.x,-170*dt,170*dt);}   // off after the pizza
     }else if(o.type==='dcar'){
       if(o.st===0&&sy>200){o.st=1;sfx('beep');}
       if(o.st===1&&sy>310){o.st=2;}
@@ -191,6 +214,7 @@ export function update(dt){
     o.y+=o.vy*dt;
     if(o.y<G.cam-90){G.obs.splice(i,1);continue;}
     if(Math.abs(o.x-P.x)<(o.w+pw)/2&&Math.abs(o.y-py)<(o.h+ph)/2){
+      if(o.type==='dog'&&o.st===3)continue;   // busy with its pizza
       if(o.type==='pickup'){var got=G.V.cap-G.pizzas;G.pizzas=G.V.cap;G.obs.splice(i,1);sfx('pickup');pop(P.x,py,got>0?'+'+got+' PIZZAS':'BAG IS FULL','#ffd23f',16,36);continue;}
       if(o.type==='life'){
         G.obs.splice(i,1);sfx('life');
@@ -199,7 +223,9 @@ export function update(dt){
         continue;
       }
       if(o.type==='puddle'){if(!o.hit){o.hit=true;G.slip=0.9;G.heat=Math.max(0,G.heat-10);sfx('splash');pop(P.x,py,'SPLASH!','#7fd4ff',15,34);}continue;}
-      if(G.V.perk.indexOf(o.type)>=0){if(o.type!=='pothole')knock(o);continue;}   // a pothole is simply ridden over
+      if(G.V.perk.indexOf(o.type)>=0){   // a pothole is simply ridden over
+        if(o.type!=='pothole')knock(o);else if(!o.hit){o.hit=true;pop(P.x,py,'SMOOTH!','#5ad1ff',12,30);}
+        continue;}
       if(G.inv<=0&&!G.opt.ghost){crash(o);if(G.state!=='play')return;}   // ghost: a test-only switch, never set in the game
     }
   }
