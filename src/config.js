@@ -4,7 +4,7 @@ export const W = 480, H = 800;
 export const VEH = [
  {name:'HOVERBOARD',price:0,spd:1.0,steer:290,cap:6,w:28,h:22,tip:1,heat:1,shield:0,blurb:['Free. Wobbly. Yours.','Small and easy to dodge with.']},
  {name:'DIRT BIKE',price:150,spd:1.14,steer:390,cap:8,w:16,h:38,tip:1,heat:1,shield:0,blurb:['Faster, sharper steering.','Carries 8 pizzas.']},
- {name:'MIDNIGHT COUPE',price:450,spd:1.28,steer:340,cap:10,w:26,h:50,tip:1.2,heat:1,shield:1,blurb:['Fast. Shrugs off 1 crash','per shift. Tips x1.2.']},
+ {name:'GUN-METAL BLACK BIMMER',price:450,spd:1.28,steer:340,cap:10,w:26,h:50,tip:1.2,heat:1,shield:1,blurb:['Fast. Shrugs off 1 crash','per shift. Tips x1.2.']},
  {name:'PAYTON PIZZA VAN',price:1000,spd:1.2,steer:300,cap:16,w:30,h:58,tip:1.5,heat:0.55,shield:1,blurb:['Oven on board: pizzas stay','hot. Tips x1.5. 16 pizzas.']}
 ];
 
@@ -12,6 +12,11 @@ export const SWL=130,RDL=160,RDR=320,SWR=350;      // sidewalk / road edges
 export const WALL_L=96,WALL_R=384;                 // house fronts
 export const LOT=210,HY0=40,HY1=170,LOT0=560;      // lot length, house span in lot, first lot
 export const YMIN=330,YMAX=650,RANGE=185;
+export const DOOR_HALF=21,HAND_R=16,WIN_HALF=13;   // how close a pizza must land: front door, customer, window
+export const PIE_SPEED=410;                        // sideways speed of a thrown pizza
+export const AHEAD=1250;                           // how far up the street traffic appears (beyond the 3D view)
+export const STEP=1/60;                            // the rules always advance in steps of this many seconds
+export const UNIT=20;                              // game units per metre in the 3D view
 export const DAYS=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
 export const ROOFS=[['#e4572e','#b8431f'],['#3d7fd9','#2c5fa8'],['#8b5cf6','#6d43d0'],['#f2a007','#c27e00'],['#2aa198','#1c7a73'],['#e0559b','#b23c78']];
 export const DULL=[['#7b808c','#5f646f'],['#8a8478','#6c675d'],['#6f7a78','#56605e']];

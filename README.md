@@ -2,7 +2,7 @@
 
 An arcade pizza-delivery game for phones and keyboards. Payton rides down the street throwing pizzas: a pizza on the front door scores, and a pizza straight into the customer's hands scores more. Tips buy faster rides, from a hoverboard up to the Payton Pizza van.
 
-**Current version:** 0.1.0 · **Status:** in development, playable on the beta link · [Roadmap](ROADMAP.md)
+**Current version:** 0.1.0 · **Status:** in development. The beta link runs the 3D build that will become v0.2.0 · [Roadmap](ROADMAP.md)
 
 - **Beta (test copy):** https://trureveal-ai.github.io/payton-pizza/beta/
 - **Live:** https://trureveal-ai.github.io/payton-pizza/ (shows "coming soon" until v1.0.0)
@@ -38,19 +38,22 @@ Planned before v1.0.0: a move to 3D with a bright, chunky look, seeded streets, 
 
 ## How it works
 
-In v0.1.0 the game is plain JavaScript drawing on one HTML canvas. There is no game engine and no server: everything runs in the browser. From v0.2.0 the drawing moves to 3D with Three.js; the rules stay plain JavaScript.
+The rules are plain JavaScript and the street is drawn in 3D with [Three.js](https://threejs.org). There is no game engine and no server: everything runs in the browser. Every 3D shape is built in code, so there are no image or model files.
 
 ```
-index.html ── src/main.js ── loop: update(dt) then frameDraw()
+index.html ── src/main.js ── loop: update(1/60 s) as many times as needed, then draw
                  │
-                 ├─ input.js    touch, mouse, keyboard
-                 ├─ game.js     rules: shifts, throwing, delivering, crashing
-                 ├─ world.js    builds each street
-                 ├─ render.js   draws everything
-                 ├─ audio.js    sound effects made in code
-                 ├─ save.js     progress kept on the device
-                 └─ state.js    the one shared object (G) the modules read and write
+                 ├─ input.js     touch, mouse, keyboard (touch.js tells a tap from a drag)
+                 ├─ game.js      rules: shifts, throwing, delivering, crashing
+                 ├─ world.js     builds each street from a seed (rng.js)
+                 ├─ render3d.js  draws the street in 3D with one fixed camera (models.js holds the shapes)
+                 ├─ render.js    draws the HUD, menus and pop-up words on top
+                 ├─ audio.js     sound effects made in code
+                 ├─ save.js      progress kept on the device
+                 └─ state.js     the one shared object (G) the modules read and write
 ```
+
+A given day always has the same street and the same traffic, for every player. The rules advance in fixed steps, so the same inputs always give the same result.
 
 Pushing to `main` builds the game and publishes it to the beta address. The live address changes only at a live release.
 
@@ -60,6 +63,7 @@ Pushing to `main` builds the game and publishes it to the beta address. The live
 | --- | --- |
 | `index.html`, `src/` | The game |
 | `tests/unit/` | Unit tests (Vitest) |
+| `tests/tools/`, `tests/fixtures/` | A screen-free player and the recorded test streets |
 | `tests/e2e/` | Browser tests at desktop and phone sizes (Playwright) |
 | `site/coming-soon/` | The page shown at the live address until launch |
 | `.github/workflows/` | CI, the release workflow, and the beta deploy |
@@ -96,9 +100,13 @@ Deploying is automatic. Merging to `main` publishes the beta copy. Nothing is de
 
 Deliver at least half the orders in a shift or you're fired. Three crashes end the run. Smashing a window costs you money.
 
+A ring on each side of the street shows where a pizza thrown right now would land. It turns green over a front door and gold over a customer's hands.
+
 ## Troubleshooting
 
 - **No sound on an iPhone:** check the ringer switch and volume, then tap the screen once. Phones only allow sound after a tap.
+- **A blank blue screen:** the browser could not start 3D drawing (WebGL). Try a current version of Safari or Chrome.
+- **Choppy play:** add `?shadows=0` to the address. Add `?fps=1` to see the frame rate.
 - **The beta link shows an old version:** reload the page. Deploys take a minute or two after a merge.
 - **Progress is gone:** the bank and rides are saved in the browser on one device. Clearing site data or using a private tab starts fresh.
 

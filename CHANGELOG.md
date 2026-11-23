@@ -5,10 +5,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Planned for v0.2.0 (Phase 2): the move to 3D (a 3D street in simple shapes, one fixed camera, a wider street and view), forgiving tap-to-throw, seeded streets and the Gun-Metal Black Bimmer.
+Built for v0.2.0 (Phase 2, 3D core and controls). On beta for review; not released yet.
+
+### Added
+- The street is drawn in 3D with Three.js: houses, customers, order badges, traffic, hazards, the four rides, pizzas in flight and the finish. Every shape is built in code.
+- One fixed camera that looks steeply down the street and never turns. The whole street, lawn to lawn, stays in view.
+- Seeded streets: a given day has the same street and the same traffic for every player.
+- Aiming marks: a ring on each side shows where a pizza thrown now would land, green over a door and gold over a customer.
+- Tap zones shown in the bottom corners on touch screens.
+- A frame-rate readout (`?fps=1`, or the F key) and testing switches (`?seed`, `?day`, `?ride`, `?shadows=0`).
+- The five test streets as recorded inputs that the unit tests replay (`npm run record` re-records them).
+- 35 more unit tests (49 in all) and a browser test for a tap that slips.
 
 ### Changed
+- The rules advance in fixed steps of 1/60 s, whatever the screen's speed.
+- The game fills the whole window. The HUD sits at the top and menus are centred.
+- The black car is now the Gun-Metal Black Bimmer, repainted gun-metal black with no badge or logo.
+- Front doors and hand-offs are bigger targets: a pizza may land 21 units from the middle of a door (was 16) and 16 from a customer (was 13).
+- Traffic appears further up the street, beyond the 3D view, so cars no longer pop in.
 - The roadmap is now eleven phases (0 to 10): the game goes 3D, and the gameplay work is split across Phases 2 and 3. Lives, Continue, extra-life pickups, ride perks, new customers and the bonus round are planned for v0.3.0. The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
+
+### Fixed
+- A tap that rolled a few pixels was treated as a drag: the ride twitched and no pizza was thrown. A touch now has to move more than 16 pixels before it steers, and a short touch that stays inside that always throws.
+
+### Not changed, on purpose
+- Scoring, tips, prices, lives, shift length and difficulty. Those are tuned in v0.3.0.
+- The garage's ride pictures are still the 2D ones.
 
 ## [0.1.0] - 2026-11-22 — Repo and walking skeleton
 

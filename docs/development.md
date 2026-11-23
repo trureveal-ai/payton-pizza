@@ -31,9 +31,27 @@ npm run check      # all four
 - A bug fix comes with a test that fails without it.
 - `window.__pp` is a read-only peek the browser tests use. It must never gain a way to change the game.
 
-### Checking that a refactor did not change play
+### Seeds, fixed steps and the recorded test streets
 
-`docs/history/prototype-2026-11-22.html` is the reference. With `Math.random` replaced by a seeded source and `requestAnimationFrame` stepped at a fixed 1/60 s, the same key presses must end on the same frame in both builds. Phase 1 was checked this way over nine runs. Phase 2 builds this into the game and the test suite.
+The rules draw every random number from `src/rng.js` and advance in fixed steps of 1/60 s, so a seed plus a list of inputs always plays out the same way. Drawing code must use `vrnd` (or `Math.random`), never `rnd`, so that what is on screen cannot change how a street plays.
+
+`tests/tools/sim.js` plays the rules with no screen. `tests/fixtures/streets.json` holds recorded inputs and results for the five test streets (T5 once per ride), each as a normal run and as a full-length run that rides through hazards. `tests/unit/streets.test.js` replays them.
+
+If a rule changes on purpose, the recordings no longer match. Run `npm run record`, check the printed results make sense, commit the new fixture and say so in the changelog.
+
+### Testing switches
+
+Add these to the page address. None of them is saved.
+
+| Switch | What it does |
+| --- | --- |
+| `?seed=1001` | Plays that street instead of the day's own |
+| `?day=14` | Starts on that day |
+| `?ride=3` | Rides that ride (0 hoverboard, 1 dirt bike, 2 Bimmer, 3 van) without owning it |
+| `?fps=1` | Shows the frame-rate readout (the F key toggles it) |
+| `?shadows=0` | Turns shadows off |
+
+The browser tests give Chromium a software renderer for WebGL, so they prove the 3D street draws but say nothing about frame rate. Frame rate is judged on a real phone with `?fps=1`.
 
 ## Where things are deployed
 
@@ -48,13 +66,17 @@ Rollback: re-run the Deploy workflow from the previous good commit.
 
 | File | Job |
 | --- | --- |
-| `src/main.js` | Entry point and the frame loop |
+| `src/main.js` | Entry point and the fixed-step loop |
 | `src/state.js` | `G`, the shared object for everything that changes during play |
-| `src/config.js` | Fixed numbers: screen size, rides, street geometry, palettes |
+| `src/config.js` | Fixed numbers: rides, street geometry, landing sizes, step length, palettes |
+| `src/rng.js` | Seeded random numbers and each day's street seed |
 | `src/world.js` | Builds a street for a shift |
-| `src/game.js` | Rules and the per-frame update |
-| `src/render.js` | All drawing |
+| `src/game.js` | Rules and the per-step update |
+| `src/render3d.js` | The 3D street and its fixed camera (Three.js). Reads the state, never changes it |
+| `src/models.js` | 3D shapes, each built in code and merged into one mesh |
+| `src/render.js` | The overlay: HUD, menus, pop-up words |
 | `src/input.js` | Touch, mouse, keyboard |
+| `src/touch.js` | Tells a tap from a drag |
 | `src/audio.js` | Sound effects |
 | `src/save.js` | Progress saved on the device |
-| `src/canvas.js`, `src/util.js` | The canvas and small helpers |
+| `src/canvas.js`, `src/util.js` | The two canvases and how the overlay sits in the window; small helpers |
