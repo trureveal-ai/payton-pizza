@@ -6,7 +6,8 @@ playwright-report/
 
 # Never commit user data, secrets or anything machine-specific
 _work/
-_build/
+_build/*
+!_build/spike-3d/
 backup-*/
 *.log
 .env

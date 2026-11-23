@@ -1,0 +1,15 @@
+{
+  "name": "payton-pizza-spike-3d",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway test: can Payton Pizza be 3D on a phone? Not part of the game.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "three": "^0.170.0",
+    "vite": "^6.0.0"
+  }
+}

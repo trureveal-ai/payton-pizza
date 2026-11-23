@@ -1,0 +1,50 @@
+name: Spike 3D page
+
+# Scratch only. Builds the throwaway 3D test in _build/spike-3d and publishes it at
+# /payton-pizza/spike-3d/. It touches nothing else on the site: not beta, not live.
+# Lives only on the spike-3d branch; delete the branch and the folder when the test is over.
+
+on:
+  push:
+    branches: [spike-3d]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the test page
+        working-directory: _build/spike-3d
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+
+      - name: Publish /spike-3d/ only
+        run: |
+          rm -rf pages/spike-3d
+          cp -r _build/spike-3d/dist pages/spike-3d
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A spike-3d
+          if git diff --cached --quiet; then echo "Nothing changed."; exit 0; fi
+          git commit -m "Publish 3D test page from ${GITHUB_SHA::7}"
+          git push origin gh-pages
