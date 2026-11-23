@@ -1,11 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
 // PW_CHROME lets a machine without Playwright's own browsers use an installed Chrome.
-const launchOptions = process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME, args: ['--no-sandbox'] } : {};
+// The 3D street needs WebGL; these switches give a test browser a software renderer when it has no graphics chip.
+const gl = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
+const launchOptions = process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME, args: ['--no-sandbox', ...gl] } : { args: gl };
 
 export default defineConfig({
   testDir: 'tests/e2e',
-  timeout: 30000,
+  timeout: 45000,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: { baseURL: 'http://localhost:4173', browserName: 'chromium', launchOptions },

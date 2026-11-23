@@ -1,6 +1,7 @@
 // Builds a street for one shift: houses, customers, hazards, pizza pickups.
 import { CARCOL, DULL, LOT, LOT0, ROOFS, SHIRT, SKIN, WALL_L, WALL_R } from './config.js';
 import { chance, pick, rnd } from './util.js';
+import { rand } from './rng.js';
 import { G } from './state.js';
 
 export function mk(type,x,y){
@@ -17,11 +18,11 @@ export function mk(type,x,y){
   return o;
 }
 export function makeLot(side,y0,cust,d){
-  var slots=[62,105,148],di=(Math.random()*3)|0;
-  var l={side:side,y0:y0,cust:cust,delivered:false,missed:false,doorY:y0+slots[di],wins:[],roof:cust?pick(ROOFS):pick(DULL),c:null,ph:rnd(0,6)};
+  var slots=[62,105,148],di=(rand()*3)|0;
+  var l={side:side,y0:y0,cust:cust,delivered:false,missed:false,slot:di,doorY:y0+slots[di],wins:[],roof:cust?pick(ROOFS):pick(DULL),c:null,ph:rnd(0,6)};
   for(var i=0;i<3;i++)if(i!==di)l.wins.push({y:y0+slots[i],broken:false});
   if(cust){
-    var r=Math.random(),type='porch',pm=Math.min(0.08+0.07*d,0.55);
+    var r=rand(),type='porch',pm=Math.min(0.08+0.07*d,0.55);
     if(r<pm)type='pacer';else if(r<pm+0.35)type='yard';
     var wall=side<0?WALL_L:WALL_R,out=-side;
     var cy=l.doorY+(type==='yard'?(chance(0.5)?-1:1)*rnd(26,36):0);
@@ -45,7 +46,7 @@ export function buildShift(d){
   }
   var count=0;for(i=0;i<G.lots.length;i++)if(G.lots[i].cust)count++;
   var guard=0;
-  while(count<12&&guard++<400){var k=(Math.random()*G.lots.length)|0;if(!G.lots[k].cust){G.lots[k]=makeLot(G.lots[k].side,G.lots[k].y0,true,d);count++;}}
+  while(count<12&&guard++<400){var k=(rand()*G.lots.length)|0;if(!G.lots[k].cust){G.lots[k]=makeLot(G.lots[k].side,G.lots[k].y0,true,d);count++;}}
   G.finishY=y+240;
   return count;
 }

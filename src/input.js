@@ -1,12 +1,14 @@
 // Touch, mouse and keyboard.
-import { H, W } from './config.js';
+import { W } from './config.js';
 import { G, P } from './state.js';
 import { save, writeSave } from './save.js';
-import { cv } from './canvas.js';
+import { cv, toUnits, view } from './canvas.js';
+import { isTap, touchMove, touchStart } from './touch.js';
 import { audioInit, sfx } from './audio.js';
 import { smartThrow, throwPizza } from './game.js';
 
-export function pos(e){var r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};}
+export function pos(e){return toUnits(e.clientX,e.clientY);}
+function sideOf(cx){return cx<view.cw/2?-1:1;}
 export function uiTap(p){
   for(var i=G.buttons.length-1;i>=0;i--){var b=G.buttons[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){if(b.fn)b.fn();return true;}}
   return false;
@@ -18,21 +20,20 @@ cv.addEventListener('pointerdown',function(e){
   if(e.pointerType==='touch')G.isTouch=true;
   var p=pos(e);
   if(G.state!=='play'){uiTap(p);return;}
-  if(p.y<42&&p.x>W-78){if(p.x>W-40)toggleMute();else G.state='pause';return;}
-  if(steerId!==null){throwPizza(p.x<W/2?-1:1);return;}   // second finger = instant throw
-  steerId=e.pointerId;drag={sx:p.x,sy:p.y,lx:p.x,ly:p.y,t:performance.now(),moved:0};
+  if(p.y-G.hudTop<42&&p.x>W-78){if(p.x>W-40)toggleMute();else G.state='pause';return;}
+  if(steerId!==null){throwPizza(sideOf(e.clientX));return;}   // second finger = instant throw
+  steerId=e.pointerId;drag=touchStart(e.clientX,e.clientY,performance.now());
   try{cv.setPointerCapture(e.pointerId);}catch(err){}
 });
 cv.addEventListener('pointermove',function(e){
   if(e.pointerId!==steerId||!drag||G.state!=='play')return;
   e.preventDefault();
-  var p=pos(e),dx=p.x-drag.lx,dy=p.y-drag.ly;
-  drag.moved+=Math.abs(dx)+Math.abs(dy);drag.lx=p.x;drag.ly=p.y;
-  if(drag.moved>8){P.tx+=dx*1.35;P.ty+=dy*1.15;}
+  var d=touchMove(drag,e.clientX,e.clientY);
+  P.tx+=d.dx/view.s*1.35;P.ty+=d.dy/view.s*1.15;
 });
 export function endPtr(e){
   if(e.pointerId!==steerId)return;
-  if(drag&&G.state==='play'&&e.type==='pointerup'&&drag.moved<10&&performance.now()-drag.t<350)throwPizza(drag.sx<W/2?-1:1);
+  if(drag&&G.state==='play'&&e.type==='pointerup'&&isTap(drag,performance.now()))throwPizza(sideOf(drag.sx));
   steerId=null;drag=null;
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
@@ -49,6 +50,7 @@ window.addEventListener('keydown',function(e){
     else if(c==='KeyX'||c==='KeyD'||c==='KeyE')throwPizza(1);
     else if(c==='Space')smartThrow();
     else if(c==='KeyP'||c==='Escape')G.state='pause';
+    else if(c==='KeyF')G.opt.fps=!G.opt.fps;
     return;
   }
   if(G.state==='pause'&&(c==='KeyP'||c==='Escape'||c==='Space')){G.state='play';return;}
