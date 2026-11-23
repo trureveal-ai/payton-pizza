@@ -199,7 +199,7 @@ function makeSlot(side) {
   const marker = new THREE.Mesh(sliceGeo, glow); marker.scale.setScalar(1.25);
   g.add(house, cust, marker);
   scene.add(g);
-  return { side, g, house, cust, body, arm, marker, has: false, done: false, dz: 0, jump: 0, ph: 0 };
+  return { side, g, house, cust, body, arm, marker, has: false, done: false, dz: 0, cz: 0, cx: 1.05, jump: 0, ph: 0 };
 }
 function dress(slot, allowCust) {
   const v = (Math.random() * HOUSES.length) | 0, ppl = pick(PEOPLE);
@@ -208,10 +208,15 @@ function dress(slot, allowCust) {
   slot.has = allowCust && Math.random() < 0.45;
   slot.done = false; slot.jump = 0; slot.ph = rnd(0, 6);
   slot.body.geometry = ppl.body; slot.arm.geometry = ppl.arm;
-  slot.cust.position.set(1.05, 0.24, slot.dz);
+  // half the customers wait on the porch, half stand in the yard beside the door (like the 2D game)
+  const yard = Math.random() < 0.5;
+  slot.cz = slot.dz + (yard ? pick([-1, 1]) * 1.55 : 0);
+  slot.cx = yard ? 0.8 : 1.05;
+  slot.cust.position.set(slot.cx, yard ? 0 : 0.24, slot.cz);
+  slot.baseY = yard ? 0 : 0.24;
   slot.cust.visible = slot.has;
   slot.marker.visible = slot.has;
-  slot.marker.position.set(1.05, 4.3, slot.dz);
+  slot.marker.position.set(slot.cx, 4.3, slot.cz);
 }
 for (let i = 0; i < NROWS; i++) {
   const row = { z: 8 - i * LOT, slots: [makeSlot(-1), makeSlot(1)] };
@@ -494,8 +499,8 @@ function resolvePie(p) {
   const pos = p.m.position, atWall = Math.abs(pos.x) >= WALL - 0.1;
   for (const row of rows) for (const s of row.slots) {
     if (s.side !== p.side || !s.has || s.done) continue;
-    const dz = pos.z - slotDoorZ(row, s), cx = s.side * (WALL - 1.05);
-    if (Math.abs(dz) < 0.85 && Math.abs(pos.x - cx) < 0.7) { deliver(s, true, pos); return true; }
+    const dz = pos.z - slotDoorZ(row, s), cz = pos.z - (row.z + (s.side > 0 ? -s.cz : s.cz)), cx = s.side * (WALL - s.cx);
+    if (Math.abs(cz) < 0.85 && Math.abs(pos.x - cx) < 0.7) { deliver(s, true, pos); return true; }
     if (atWall && Math.abs(dz) < 0.95) { deliver(s, false, pos); return true; }
   }
   if (atWall) { stats.miss++; pop(pos, 'THUNK', '#dfe4ec'); return true; }
@@ -593,7 +598,7 @@ function frame(now) {
       if (!s.has) continue;
       if (s.jump > 0) s.jump -= dt;
       const hop = s.jump > 0 ? Math.abs(Math.sin(s.jump * 9)) * 0.5 : 0;
-      s.cust.position.y = 0.24 + hop;
+      s.cust.position.y = s.baseY + hop;
       s.arm.rotation.x = s.done ? Math.sin(time * 14 + s.ph) * 0.9 : Math.sin(time * 5 + s.ph) * 0.45;
       if (s.marker.visible) { s.marker.position.y = 4.3 + Math.sin(time * 4 + s.ph) * 0.18; s.marker.rotation.y = time * 2.2 + s.ph; }
     }
