@@ -24,18 +24,20 @@ An arcade pizza-delivery game for phones and keyboards. Payton rides down the st
 
 ## Features
 
-In v0.2.0:
+In v0.3.0 (on the beta address; v0.2.0 is the latest release):
 
 - A 3D street with houses on both sides and one fixed camera. Bright houses ordered; gray houses did not.
 - Front-door deliveries, hand-off bonuses with combos, and a heat bar that raises tips.
 - Aiming rings that show where a pizza thrown now would land.
-- Four rides and a garage: hoverboard, dirt bike, Gun-Metal Black Bimmer, Payton Pizza van.
-- Hazards: traffic, trash cans, hydrants, cones, potholes, dogs, skaters, cars backing out of driveways.
-- Shifts by weekday that get harder, with a shift ticket at the end of each. Every player gets the same street on a given day.
+- Four rides and a garage: hoverboard, dirt bike, Gun-Metal Black Bimmer, Payton Pizza van. Each ride shrugs off more hazards than the one before.
+- Hazards: traffic, trash cans, hydrants, cones, potholes, puddles, balls, roadwork barriers, dogs, skaters, cars backing out of driveways.
+- Customers who wait on the porch, in the yard or at the curb, pace about, or give up and go inside.
+- Three lives that carry between shifts, extra-life pickups, and Continue from the day you reached.
+- Shifts by weekday that get harder, with a shift ticket at the end of each and a bonus round after Sunday. Every player gets the same street on a given day.
 - Touch controls and keyboard controls.
 - Bank, rides and high score saved on the device.
 
-Planned before v1.0.0: a Continue option and extra lives, ride perks, new customers and a bonus round, a finished look for the street, rides and people, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
+Planned before v1.0.0: a finished look for the street, rides and people, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
 
 ## How it works
 
@@ -46,7 +48,7 @@ index.html ── src/main.js ── loop: update(1/60 s) as many times as neede
                  │
                  ├─ input.js     touch, mouse, keyboard (touch.js tells a tap from a drag)
                  ├─ game.js      rules: shifts, throwing, delivering, crashing
-                 ├─ world.js     builds each street from a seed (rng.js)
+                 ├─ world.js     builds each street from a seed (rng.js); tuning.js says how hard each day is
                  ├─ render3d.js  draws the street in 3D with one fixed camera (models.js holds the shapes)
                  ├─ render.js    draws the HUD, menus and pop-up words on top
                  ├─ audio.js     sound effects made in code
@@ -99,7 +101,18 @@ Deploying is automatic. Merging to `main` publishes the beta copy. Nothing is de
 | Throw toward the nearest order | | Space |
 | Pause, sound | Buttons at the top right | P, M |
 
-Deliver at least half the orders in a shift or you're fired. Three crashes end the run. Smashing a window costs you money.
+Deliver at least half the orders in a shift or you're fired. Smashing a window costs you money.
+
+You start with three lives and a crash costs one. Lives carry into the next shift, finishing a shift gives one back (up to three), and hearts on the road add more (up to five). When a run ends you can continue from the start of the day you reached: your bank and rides are kept and your score starts again from zero.
+
+| Ride | Carries | Shrugs off |
+| --- | --- | --- |
+| Hoverboard | 8 pizzas | Nothing |
+| Dirt bike | 10 | Potholes |
+| Gun-Metal Black Bimmer | 12 | Potholes, cones, trash cans, balls |
+| Payton Pizza van | 16 | All of those, plus dogs and skaters |
+
+Traffic, cars backing out, hydrants and roadwork barriers hurt every ride. A puddle costs no life but makes the ride slide.
 
 A ring on each side of the street shows where a pizza thrown right now would land. It turns green over a front door and gold over a customer's hands.
 

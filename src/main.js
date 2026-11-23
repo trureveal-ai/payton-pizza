@@ -55,7 +55,7 @@ toTitle();
 window.__pp={get state(){return G.state;},get score(){return G.score;},get day(){return G.day;},get lives(){return G.lives;},
   get step(){return G.step;},get webgl(){return !!G.webgl;},get fps(){return G.fps;},get draws(){return info3d().calls;},
   get stats(){return G.stats?Object.assign({},G.stats):null;},
-  get pizzas(){return G.pizzas;},get x(){return P.x;},get tx(){return P.tx;},
+  get pizzas(){return G.pizzas;},get x(){return P.x;},get tx(){return P.tx;},get bonus(){return !!G.bonus;},get ride(){return G.ride;},
   // where a spot in the 480-wide overlay is on the page; `anchor` is 'top', 'mid' or 'bottom'
   spot:function(x,y,anchor){var oy=anchor==='top'?0:anchor==='bottom'?view.VH-800:(view.VH-800)/2;return{x:view.ox+x*view.s,y:(y+oy)*view.s};},
   units:toUnits,

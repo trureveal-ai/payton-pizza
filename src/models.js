@@ -154,6 +154,33 @@ export function skateboardGeo() {
   return merge(p);
 }
 
+// ---------- new in v0.3.0: extra life, puddle, ball, roadwork barrier ----------
+export function heartGeo() {
+  var sh = new THREE.Shape();
+  sh.moveTo(0, -0.42);
+  sh.bezierCurveTo(-0.7, 0.05, -0.5, 0.55, 0, 0.22);
+  sh.bezierCurveTo(0.5, 0.55, 0.7, 0.05, 0, -0.42);
+  var g = new THREE.ExtrudeGeometry(sh, { depth: 0.2, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 1, curveSegments: 8 });
+  return merge([part(g, '#ff3b4e', [0, 0, -0.1]), part(ball(0.09), '#ffd0d6', [-0.18, 0.2, 0.17])]);
+}
+export function puddleGeo() {
+  return merge([part(cyl(0.78, 0.02, 16), '#3f9be0', [0, 0.012, 0], null, [1, 1, 0.6]), part(cyl(0.45, 0.02, 12), '#8fd3ff', [-0.12, 0.022, -0.05], null, [1, 1, 0.5])]);
+}
+export function ballGeo(col) {
+  return merge([part(ball(0.34), col, [0, 0.34, 0]), part(cyl(0.345, 0.1, 14), '#ffffff', [0, 0.34, 0])]);
+}
+// a striped board across one lane (3.2 m wide)
+export function barrierGeo() {
+  var p = [part(box(0.12, 1.0, 0.5, 0.03), '#f4f6fa', [-1.45, 0.5, 0]), part(box(0.12, 1.0, 0.5, 0.03), '#f4f6fa', [1.45, 0.5, 0]),
+    part(box(0.3, 0.08, 0.7, 0.02), '#8a92a3', [-1.45, 0.04, 0]), part(box(0.3, 0.08, 0.7, 0.02), '#8a92a3', [1.45, 0.04, 0]),
+    part(ball(0.12), '#ffb000', [-1.45, 1.1, 0]), part(ball(0.12), '#ffb000', [1.45, 1.1, 0])];
+  for (var i = 0; i < 8; i++) {
+    p.push(part(box(0.4, 0.3, 0.1, 0.02), i % 2 ? '#ffffff' : '#ff7a1a', [-1.4 + i * 0.4, 0.82, 0]));
+    p.push(part(box(0.4, 0.22, 0.1, 0.02), i % 2 ? '#ff7a1a' : '#ffffff', [-1.4 + i * 0.4, 0.42, 0]));
+  }
+  return merge(p);
+}
+
 // ---------- Payton and the rides (noses toward -z, which is up the street) ----------
 // Payton faces -z here, so his own shape is turned a quarter turn from the customers'.
 export function paytonGeo() {

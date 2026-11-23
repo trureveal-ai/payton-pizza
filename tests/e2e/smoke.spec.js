@@ -79,3 +79,22 @@ test('the garage opens and goes back (keyboard)', async ({ page, isMobile }) => 
   await page.keyboard.press('Escape');
   await expect.poll(() => page.evaluate(() => window.__pp.state)).toBe('title');
 });
+
+test('Continue on the title screen picks up from the saved day; a new run starts on Monday', async ({ page, isMobile }) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('payton-pizza-v1')) localStorage.setItem('payton-pizza-v1', JSON.stringify({ bank: 30, owned: [true, false, false, false], ride: 0, hi: 900, bestDay: 4, cont: 4, mute: true }));
+  });
+  await page.goto('/');
+  await ready(page);
+  if (isMobile) { const p = await spot(page, 240, 407); await page.touchscreen.tap(p.x, p.y); }
+  else await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => window.__pp.state)).toBe('play');
+  expect(await page.evaluate(() => ({ day: window.__pp.day, score: window.__pp.score, lives: window.__pp.lives }))).toEqual({ day: 4, score: 0, lives: 3 });
+  // back to the title, then a new run
+  await page.reload();
+  await ready(page);
+  if (isMobile) { const p = await spot(page, 240, 465); await page.touchscreen.tap(p.x, p.y); }
+  else await page.keyboard.press('KeyN');
+  await expect.poll(() => page.evaluate(() => window.__pp.state)).toBe('play');
+  expect(await page.evaluate(() => window.__pp.day)).toBe(1);
+});
