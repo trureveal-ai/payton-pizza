@@ -34,11 +34,11 @@ In v0.1.0:
 - Touch controls and keyboard controls.
 - Bank, rides and high score saved on the device.
 
-Planned before v1.0.0: seeded streets, new customers and a bonus round, polished art, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
+Planned before v1.0.0: a move to 3D with a bright, chunky look, seeded streets, new customers and a bonus round, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
 
 ## How it works
 
-The game is plain JavaScript drawing on one HTML canvas. There is no game engine and no server: everything runs in the browser.
+In v0.1.0 the game is plain JavaScript drawing on one HTML canvas. There is no game engine and no server: everything runs in the browser. From v0.2.0 the drawing moves to 3D with Three.js; the rules stay plain JavaScript.
 
 ```
 index.html ── src/main.js ── loop: update(dt) then frameDraw()
@@ -108,14 +108,17 @@ Versions follow [Semantic Versioning](https://semver.org). Each phase of the bui
 
 | Version | Phase | Adds | Runs on | Status |
 | --- | --- | --- | --- | --- |
-| v0.1.0 | 1 | Repo and walking skeleton | Beta | Released |
-| v0.2.0 | 2 | Gameplay core | Beta | Planned |
-| v0.3.0 | 3 | Art and feel | Beta | Planned |
-| v0.4.0 | 4 | Music and sound | Beta | Planned |
-| v0.5.0 | 5 | Personal bests and install on phone | Beta | Planned |
-| v0.6.0 | 6 | Shared leaderboard | Beta | Planned |
-| v0.7.0 | 7 | Invitation group leaderboards | Beta | Planned |
-| v1.0.0 | 8 | First live release | Live | Planned |
+| v0.1.0 | 1 | Repo and walking skeleton (2D) | Beta | Released |
+| v0.2.0 | 2 | Gameplay core in 3D | Beta | Planned |
+| v0.3.0 | 3 | 3D world and rides | Beta | Planned |
+| v0.4.0 | 4 | Characters and polish | Beta | Planned |
+| v0.5.0 | 5 | Music and sound | Beta | Planned |
+| v0.6.0 | 6 | Personal bests and install on phone | Beta | Planned |
+| v0.7.0 | 7 | Shared leaderboard | Beta | Planned |
+| v0.8.0 | 8 | Invitation group leaderboards | Beta | Planned |
+| v1.0.0 | 9 | First live release | Live | Planned |
+
+The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
 
 Releases are automatic: when `VERSION` changes on `main`, the release workflow runs the tests, then creates the git tag and the GitHub Release from `docs/releases/v<version>.md`. Nobody tags by hand.
 
