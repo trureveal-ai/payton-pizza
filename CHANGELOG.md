@@ -5,7 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Phase 3, deeper gameplay. On the beta address for review; it becomes v0.3.0 when Cam approves the difficulty.
+Planned for v0.4.0 (Phase 4, 3D world and rides): the finished look for the street, houses, props, traffic, the shop and the rides; day and dusk; a low-effects setting. Asked for by Cam on 2026-11-23 and proposed for the same phase: neighborhoods that look different from week to week, and more rides in the garage.
+
+## [0.3.0] - 2026-11-23 — Deeper gameplay
+
+Lives that matter, a way back in when a run ends, rides worth buying, more going on in the street, and a week that builds to a bonus round. Cam played it on the beta address through three rounds of changes and approved the difficulty.
 
 ### Added
 - **Continue.** When a run ends, the game-over screen offers to continue from the start of the day you reached, with three lives. Your bank and rides are kept and your score starts again from zero. The title screen offers the same after you close the game. Starting a new run from Monday replaces the saved day.
