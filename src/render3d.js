@@ -254,7 +254,7 @@ function makeObs(o) {
     m.rotation.y = -Math.PI / 2; m.position.y = 0.17; m.scale.setScalar(0.95); g.add(m);
   } else if (t === 'pickup') {
     g.add(mesh(cached('pickup', M.pickupGeo)));
-    var ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.95, 24), new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.7, depthWrite: false }));
+    var ring = new THREE.Mesh(cached('pickupRing', function () { return new THREE.RingGeometry(0.75, 0.95, 24); }), pickupRingMat);
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04; g.add(ring); g.userData.ring = ring;
   }
   world.add(g);
@@ -309,6 +309,7 @@ function syncPlayer(t, dt) {
   if (u.ring.visible) u.ring.scale.set(G.V.w / UNIT * 0.5 + 0.55, G.V.h / UNIT * 0.5 + 0.55, 1);
 }
 var BULB_ON = new THREE.Color('#fffbe0'), BULB_OFF = new THREE.Color('#ff8a1e');
+var pickupRingMat = new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.7, depthWrite: false });
 var AIM = { hand: ['#ffd23f', 0.95, 1.25], door: ['#7dff8a', 0.9, 1.1], window: ['#ff5964', 0.75, 1], wall: ['#ffffff', 0.32, 0.9] };
 
 function syncThrown(t) {

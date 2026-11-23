@@ -129,7 +129,7 @@ export function update(dt){
   // missed orders
   for(i=0;i<G.lots.length;i++){l=G.lots[i];
     if(l.cust&&!l.delivered&&!l.missed&&l.y0+LOT<G.cam-6){l.missed=true;G.stats.missed++;G.streak=0;
-      popScreen(l.side<0?80:W-80,H-70,'MISSED ORDER!','#ff5964',18);sfx('bad');}}
+      popScreen(l.side<0?80:W-80,H-170,'MISSED ORDER!','#ff5964',18);sfx('bad');}}
 
   // obstacles
   var pw=G.V.w*0.78,ph=G.V.h*0.78;
