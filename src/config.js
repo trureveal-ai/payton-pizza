@@ -3,12 +3,15 @@ export const W = 480, H = 800;
 
 // `perk` lists the hazards a ride shrugs off. Each ride keeps the perks of the ones before it.
 export const VEH = [
- {name:'HOVERBOARD',price:0,spd:1.0,steer:290,cap:8,w:28,h:22,tip:1,heat:1,shield:0,perk:[],blurb:['Free. Wobbly. Yours.','Small and easy to dodge with.'],perkText:'No perks. All skill.'},
- {name:'DIRT BIKE',price:150,spd:1.14,steer:390,cap:10,w:16,h:38,tip:1,heat:1,shield:0,perk:['pothole'],blurb:['Faster, sharper steering.','Carries 10 pizzas.'],perkText:'Rides over potholes.'},
- {name:'GUN-METAL BLACK BIMMER',price:450,spd:1.28,steer:340,cap:12,w:26,h:50,tip:1.2,heat:1,shield:1,perk:['pothole','cone','can','ball'],blurb:['Fast. Shrugs off 1 crash','per shift. Tips x1.2.'],perkText:'Also knocks cones and bins aside.'},
- {name:'PAYTON PIZZA VAN',price:1000,spd:1.2,steer:300,cap:16,w:30,h:58,tip:1.5,heat:0.55,shield:1,perk:['pothole','cone','can','ball','dog','skater'],blurb:['Oven on board: pizzas stay','hot. Tips x1.5. 16 pizzas.'],perkText:'Also shrugs off dogs and skaters.'}
+ {name:'HOVERBOARD',price:0,spd:1.0,steer:290,cap:8,w:28,h:22,tip:1,heat:1,shield:0,perk:[],blurb:['Free. Wobbly. Yours.','Small and easy to dodge with.'],perkText:['PERKS: none.','Every hazard wipes you out.'],perkShort:'NO PERKS ON THE HOVERBOARD'},
+ {name:'DIRT BIKE',price:150,spd:1.14,steer:390,cap:10,w:16,h:38,tip:1,heat:1,shield:0,perk:['pothole'],blurb:['Faster, sharper steering.','Carries 10 pizzas.'],perkText:['PERK: rides over potholes.',''],perkShort:'PERK: RIDES OVER POTHOLES'},
+ {name:'GUN-METAL BLACK BIMMER',price:450,spd:1.28,steer:340,cap:12,w:26,h:50,tip:1.2,heat:1,shield:1,perk:['pothole','cone','can','ball'],blurb:['Fast. Shrugs off 1 crash','per shift. Tips x1.2.'],perkText:['PERKS: rides over potholes. Knocks','cones, bins and balls aside.'],perkShort:'PERKS: POTHOLES, CONES, BINS, BALLS'},
+ {name:'PAYTON PIZZA VAN',price:1000,spd:1.2,steer:300,cap:16,w:30,h:58,tip:1.5,heat:0.55,shield:1,perk:['pothole','cone','can','ball','dog','skater'],blurb:['Oven on board: pizzas stay','hot. Tips x1.5. 16 pizzas.'],perkText:['PERKS: all of the Bimmer\'s. Dogs','and skaters bounce off too.'],perkShort:'PERKS: ALL THE BIMMER\'S + DOGS, SKATERS'}
 ];
 export const START_LIVES=3,MAX_LIVES=5;
+// A dog runs at you for DOG_CHASE seconds (DOG_RUN units a second sideways), then keeps to that line. A pizza thrown its way,
+// while it is no more than DOG_REACH up the street, sends it off after the pizza instead.
+export const DOG_CHASE=0.8,DOG_RUN=175,DOG_REACH=440;
 
 export const SWL=130,RDL=160,RDR=320,SWR=350;      // sidewalk / road edges
 export const WALL_L=96,WALL_R=384;                 // house fronts

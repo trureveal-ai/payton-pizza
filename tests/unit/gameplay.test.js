@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { H, MAX_LIVES, START_LIVES, STEP, VEH } from '../../src/config.js';
+import { DOG_CHASE, H, MAX_LIVES, START_LIVES, STEP, VEH } from '../../src/config.js';
 import { G, P } from '../../src/state.js';
 import { save } from '../../src/save.js';
 import { tune } from '../../src/tuning.js';
 import { mk } from '../../src/world.js';
-import { aimAt, continueRun, endShift, nextShift, startRun, throwPizza, update } from '../../src/game.js';
+import { aimAt, continueRun, dogOn, endShift, nextShift, startRun, throwPizza, update } from '../../src/game.js';
 
 function start(day, ride, seed) {
   Object.assign(save, { bank: 0, owned: [true, true, true, true], ride: ride || 0, hi: 0, bestDay: 0, cont: 1, mute: true });
@@ -243,5 +243,51 @@ describe('the bonus round', () => {
     };
     const a = scoreFor(false), b = scoreFor(true);
     if (a != null && b != null) expect(b).toBe(a * 2);
+  });
+});
+
+describe('dogs', () => {
+  // an empty street with one dog waiting at the left curb, a little way ahead
+  function dog(ride) {
+    start(5, ride || 0); G.obs = []; G.shieldLeft = 0;
+    for (const l of G.lots) { l.cust = false; l.c = null; }
+    const o = Object.assign(mk('dog', 114, py() + 420), { side: -1 }); G.obs.push(o);
+    P.x = P.tx = 200;
+    return o;
+  }
+  const until = (f, max) => { let n = 0; while (G.state === 'play' && !f() && n++ < (max || 2000)) update(STEP); };
+  it('a dog runs at you for a moment, then keeps to that line instead of following you', () => {
+    const o = dog(); until(() => o.st === 1);
+    const x0 = o.x; until(() => o.st === 2);
+    expect(o.x).toBeGreaterThan(x0);                       // it came toward the ride
+    expect(o.ct).toBeGreaterThanOrEqual(DOG_CHASE);
+    const line = o.x; P.x = P.tx = 320; steps(90);         // swerve away: it does not follow
+    expect(o.x).toBe(line);
+    expect(G.lives).toBe(START_LIVES);
+  });
+  it('it still wipes you out if you stay in its way', () => {
+    const o = dog(); until(() => G.lives < START_LIVES || !G.obs.includes(o));
+    expect(G.lives).toBe(START_LIVES - 1);
+  });
+  it('a pizza thrown its way sends it off to the curb, and then it cannot hurt you', () => {
+    const o = dog(); until(() => o.st === 1);
+    expect(dogOn(-1)).toBe(o); expect(dogOn(1)).toBeNull();
+    until(() => o.st === 2 && o.y - py() < 60);            // leave it late: it is in your lane and about to hit
+    const had = G.pizzas, score = G.score;
+    throwPizza(-1);
+    expect(o.st).toBe(3); expect(G.pizzas).toBe(had - 1); expect(G.score).toBe(score + 25); expect(G.stats.fed).toBe(1);
+    until(() => !G.obs.includes(o));                       // ride straight through where it was
+    expect(G.lives).toBe(START_LIVES);
+    expect(o.x).toBe(120);                                 // it ended up at the curb
+  });
+  it('a pizza thrown the other way, or at a dog that is not chasing, does nothing to it', () => {
+    let o = dog(); until(() => o.st === 1); throwPizza(1);
+    expect(o.st).toBe(1);
+    o = dog(); throwPizza(-1);
+    expect(o.st).toBe(0);
+  });
+  it('the van still bounces dogs off without a pizza', () => {
+    const o = dog(3); until(() => o.out || G.lives < START_LIVES);
+    expect(o.out).toBe(true); expect(G.lives).toBe(START_LIVES);
   });
 });

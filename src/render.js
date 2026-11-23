@@ -105,7 +105,7 @@ export function drawHUD(){
 }
 export function drawBanner(){
   var a=clamp(G.bannerT,0,1);ctx.globalAlpha=a;
-  R(0,292,W,132,'rgba(15,16,22,0.82)');
+  R(0,292,W,G.bonus?132:156,'rgba(15,16,22,0.82)');
   if(G.bonus){
     T('PIZZA PARTY!',W/2,328,34,'#ffd23f','center','#000');
     T('BONUS ROUND  -  EVERY HOUSE ORDERED',W/2,366,14,'#fff','center');
@@ -115,6 +115,7 @@ export function drawBanner(){
     T(G.stats.orders+' ORDERS  -  DELIVER AT LEAST HALF',W/2,364,14,'#fff','center');
     var n=Math.min(MAX_LIVES,Math.max(3,G.lives));
     T('LIVES',W/2-n*11-12,399,13,'#cfd6e3','right');hearts(W/2-n*11+10,397,22,1);
+    T(G.V.perkShort,W/2,430,12,'#5ad1ff','center');
   }
   ctx.globalAlpha=1;
 }
@@ -144,7 +145,8 @@ export function drawStreetWords(){
     for(i=0;i<G.obs.length;i++){var o=G.obs[i];
       if(o.y<G.cam-60||o.y>G.cam+1300)continue;
       if(o.type==='dcar'&&o.st===1){q=G.project(o.x,o.y,40);T('!',q.x,q.y,18,'#ffd23f','center','#000');}
-      else if(o.type==='dog'&&o.st===1&&o.t%0.6<0.3){q=G.project(o.x,o.y,34);T('GRR',q.x,q.y,11,'#fff','center','#000');}
+      else if(o.type==='dog'&&(o.st===1||o.st===2)&&o.t%0.6<0.3){q=G.project(o.x,o.y,34);T('GRR',q.x,q.y,11,'#fff','center','#000');}
+      else if(o.type==='dog'&&o.st===3){q=G.project(o.x,o.y,34);T('YUM',q.x,q.y,11,'#9cf07a','center','#000');}
       else if(o.type==='pickup'&&!G.bonus){q=G.project(o.x,o.y,34);T('PIZZA',q.x,q.y-Math.sin(o.t*5)*2,11,'#ffd23f','center','#000');}
       else if(o.type==='life'){q=G.project(o.x,o.y,44);T('+1 LIFE',q.x,q.y-Math.sin(o.t*5)*2,12,'#ff6b7d','center','#000');}
     }
@@ -292,17 +294,17 @@ export function drawGarage(){
     RR(26,cy+12,112,122,8,'#44464f');
     ctx.fillStyle='#f5d547';ctx.fillRect(80,cy+18,3,22);ctx.fillRect(80,cy+64,3,22);ctx.fillRect(80,cy+108,3,20);
     ctx.save();ctx.translate(82,cy+73);ctx.scale(1.7,1.7);drawVeh(i,0,0,0,1,G.tGame);ctx.restore();
-    T(v.name,152,cy+26,18,'#fff');
-    T(v.blurb[0],152,cy+50,12,'#cfd6e3');T(v.blurb[1],152,cy+66,12,'#cfd6e3');
-    T(v.perkText,152,cy+80,11,'#5ad1ff');
-    T('SPEED',152,cy+94,11,'#9aa3b2');
-    for(var k=0;k<6;k++)R(196+k*11,cy+89,8,10,k<Math.round((v.spd-0.9)*14)?'#ff9f1c':'#3a3f4d');
-    T('CARRY '+v.cap,280,cy+94,11,'#9aa3b2');
+    T(v.name,152,cy+24,18,'#fff');
+    T(v.blurb[0],152,cy+44,12,'#cfd6e3');T(v.blurb[1],152,cy+58,12,'#cfd6e3');
+    T(v.perkText[0],152,cy+74,12,'#5ad1ff');T(v.perkText[1],152,cy+88,12,'#5ad1ff');
+    T('SPEED',152,cy+102,11,'#9aa3b2');
+    for(var k=0;k<6;k++)R(196+k*11,cy+97,8,10,k<Math.round((v.spd-0.9)*14)?'#ff9f1c':'#3a3f4d');
+    T('CARRY '+v.cap,280,cy+102,11,'#9aa3b2');
     (function(i,v){
-      if(sel)btn(152,cy+104,300,34,'RIDING',null,{disabled:true,size:15});
-      else if(own)btn(152,cy+104,300,34,'RIDE THIS',function(){save.ride=i;G.V=VEH[i];writeSave();sfx('ui');},{size:15,key:'Digit'+(i+1)});
-      else if(save.bank>=v.price)btn(152,cy+104,300,34,'BUY  $'+v.price,function(){save.bank-=v.price;save.owned[i]=true;save.ride=i;G.V=VEH[i];writeSave();sfx('buy');},{primary:true,size:15,key:'Digit'+(i+1)});
-      else btn(152,cy+104,300,34,'$'+v.price+'  (NEED $'+(v.price-save.bank)+' MORE)',null,{disabled:true,size:13});
+      if(sel)btn(152,cy+110,300,30,'RIDING',null,{disabled:true,size:14});
+      else if(own)btn(152,cy+110,300,30,'RIDE THIS',function(){save.ride=i;G.V=VEH[i];writeSave();sfx('ui');},{size:15,key:'Digit'+(i+1)});
+      else if(save.bank>=v.price)btn(152,cy+110,300,30,'BUY  $'+v.price,function(){save.bank-=v.price;save.owned[i]=true;save.ride=i;G.V=VEH[i];writeSave();sfx('buy');},{primary:true,size:15,key:'Digit'+(i+1)});
+      else btn(152,cy+110,300,30,'$'+v.price+'  (NEED $'+(v.price-save.bank)+' MORE)',null,{disabled:true,size:13});
     })(i,v);
   }
   btn(140,726,200,54,'BACK',function(){sfx('ui');G.state=G.garageFrom==='report'?'report':'title';if(G.state==='title')toTitle();},{primary:true,key:'Escape'});

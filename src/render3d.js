@@ -286,7 +286,14 @@ function syncObs() {
     else if (o.type === 'life') { g.userData.spin.rotation.y = o.t * 2.4; g.userData.spin.position.y = 0.9 + Math.sin(o.t * 4) * 0.15; g.userData.ring.scale.setScalar(1 + Math.sin(o.t * 5) * 0.1); }
     else if (o.type === 'ball') { y = o.st === 1 ? Math.abs(Math.sin(o.t * 7)) * 0.5 : 0; g.rotation.z = -o.side * o.t * (o.st === 1 ? 5 : 0); }
     else if (o.type === 'pickup') { y = 0.15 + Math.abs(Math.sin(o.t * 2.5)) * 0.25; g.rotation.y = o.t * 1.5; if (g.userData.ring) { g.userData.ring.position.y = 0.04 - y; g.userData.ring.scale.setScalar(1 + Math.sin(o.t * 5) * 0.08); } }
-    else if (o.type === 'dog') { g.rotation.y = o.st === 1 ? Math.atan2(-(P.x - o.x), 30) : (o.side < 0 ? -Math.PI / 2 : Math.PI / 2); y = o.st === 1 ? Math.abs(Math.sin(o.t * 20)) * 0.12 : 0; }
+    else if (o.type === 'dog') {
+      var run = o.st === 1 || o.st === 2, off = o.st === 3 && Math.abs((o.fs < 0 ? 120 : 360) - o.x) > 2;
+      if (o.st === 1) g.rotation.y = Math.atan2(-(P.x - o.x), -Math.max(40, o.y - (G.cam + H - P.sy)));   // nose at the ride
+      else if (o.st === 2) g.rotation.y = Math.PI;                                                             // straight down the street
+      else if (o.st === 3) g.rotation.y = off ? (o.fs < 0 ? Math.PI / 2 : -Math.PI / 2) : Math.PI + Math.sin(o.t * 14) * 0.25;   // to the curb, then a happy wiggle
+      else g.rotation.y = o.side < 0 ? -Math.PI / 2 : Math.PI / 2;
+      y = run || off ? Math.abs(Math.sin(o.t * 20)) * 0.12 : 0;
+    }
     else if (o.type === 'skater') g.rotation.y = Math.PI + Math.cos(o.t * 3) * 0.2;
     g.position.set(X(o.x), y, Z(o.y));
   }
