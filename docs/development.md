@@ -49,6 +49,7 @@ Add these to the page address. None of them is saved.
 | --- | --- |
 | `?seed=1001` | Plays that street instead of the day's own |
 | `?day=14` | Starts on that day. Continue is hidden and the saved Continue day is left alone |
+| `?bonus=1` | Starts in the bonus round (the one after Sunday). Same rules as `?day` for Continue |
 | `?ride=3` | Rides that ride (0 hoverboard, 1 dirt bike, 2 Bimmer, 3 van) without owning it |
 | `?fps=1` | Shows the frame-rate readout (the F key toggles it) |
 | `?shadows=0` | Turns shadows off |

@@ -3,7 +3,7 @@
 import { STEP } from '../../src/config.js';
 import { G, P } from '../../src/state.js';
 import { save } from '../../src/save.js';
-import { aimAt, dogOn, startRun, throwPizza, update } from '../../src/game.js';
+import { aimAt, startRun, throwPizza, update } from '../../src/game.js';
 
 export const STREETS = [
   { id: 'T1', note: 'Monday, hoverboard (shortest)', seed: 1001, day: 1, ride: 0 },
@@ -58,7 +58,12 @@ export function record(street, ghost) {
     var cost = Math.abs(lx - 240) * 0.004, lo = Math.min(lx, P.x), hi = Math.max(lx, P.x);
     for (var j = 0; j < G.obs.length; j++) {
       var q = G.obs[j], ahead = q.y - py, closing = G.speed - q.vy;
-      if (q.out || ahead < -70 || closing <= 5) continue;
+      if (q.out) continue;
+      if (q.type === 'dog') {   // it runs alongside, so keep away from its side of the street
+        if ((q.st === 1 || q.st === 2) && G.V.perk.indexOf('dog') < 0) cost += Math.max(0, 1 - Math.abs(q.x - lx) / 170) * 3;
+        continue;
+      }
+      if (ahead < -70 || closing <= 5) continue;
       var t = Math.max(0, ahead - 45) / closing;
       if (t > 2.5) continue;
       var ox = q.x, need = (q.w + G.V.w) / 2 + 12;
@@ -68,7 +73,6 @@ export function record(street, ghost) {
       if (G.V.perk.indexOf(q.type) >= 0) continue;                               // this ride shrugs it off
       if (q.type === 'ball') { ox = q.st === 1 ? q.x - q.side * 95 * t : 240; need += q.st === 1 ? 14 : 70; }
       if (q.type === 'dcar' && q.st < 3) { ox = 240; need += 90; }
-      else if (q.type === 'dog') { if (q.st === 3) continue; need += q.st === 2 ? 6 : 30 + 175 * Math.min(t, 0.8 - (q.ct || 0)); }
       else if (q.type === 'skater') need += 10;
       if (Math.abs(ox - lx) < need) cost += 4 / (t + 0.1);                       // it will be in this lane
       else if (ox > lo - need && ox < hi + need && Math.abs(ox - P.x) / rate + 0.2 > t) cost += 6 / (t + 0.1);   // it is in the way of getting there
@@ -82,7 +86,8 @@ export function record(street, ghost) {
     if (best !== lastX) { events.push([G.step, 'x', best]); P.tx = best; lastX = best; }
     if (G.throwCd <= 0 && G.pizzas > 0) for (var side = -1; side <= 1; side += 2) {
       var a = aimAt(side);
-      if (a.hit === 'hand' || a.hit === 'door' || (G.pizzas > 2 && G.V.perk.indexOf('dog') < 0 && dogOn(side))) { events.push([G.step, 't', side]); throwPizza(side); break; }
+      // an order in reach, or a dog alongside to feed
+      if (a.hit === 'hand' || a.hit === 'door' || (a.hit === 'dog' && G.V.perk.indexOf('dog') < 0)) { events.push([G.step, 't', side]); throwPizza(side); break; }
     }
     update(STEP);
   }
