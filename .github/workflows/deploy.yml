@@ -2,9 +2,9 @@ name: Deploy beta
 
 # Builds main and publishes it as the BETA copy at /payton-pizza/beta/.
 # The live address (/payton-pizza/) keeps showing site/coming-soon until the
-# first live release (Phase 8), when this workflow starts publishing the game
+# first live release (v1.0.0), when this workflow starts publishing the game
 # there from the release tag.
-# GitHub Pages serves the gh-pages branch; this workflow is the only thing that writes to it.
+# GitHub Pages serves the gh-pages branch, which only workflows write to.
 
 on:
   push:
@@ -47,6 +47,7 @@ jobs:
       - name: Publish beta and the coming-soon page
         run: |
           rm -rf pages/beta
+          rm -rf pages/spike-3d   # the 3D test page, retired at v0.2.0 (its sources stay on the spike-3d branch)
           cp -r dist pages/beta
           cp site/coming-soon/index.html pages/index.html
           touch pages/.nojekyll
