@@ -16,6 +16,7 @@ import './input.js';
   var q=new URLSearchParams(location.search),n=function(k){var v=parseInt(q.get(k),10);return isFinite(v)?v:null;};
   if(n('seed')!=null)G.opt.seed=n('seed');
   if(n('day')!=null)G.opt.day=Math.max(1,n('day'));
+  if(q.get('bonus')==='1'){G.opt.bonus=true;if(G.opt.day==null)G.opt.day=7;}
   if(n('ride')!=null)G.opt.ride=Math.max(0,Math.min(3,n('ride')));
   if(q.get('fps')==='1')G.opt.fps=true;
   if(q.get('shadows')==='0')G.opt.shadows=0;

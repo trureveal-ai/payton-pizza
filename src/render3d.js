@@ -287,12 +287,14 @@ function syncObs() {
     else if (o.type === 'ball') { y = o.st === 1 ? Math.abs(Math.sin(o.t * 7)) * 0.5 : 0; g.rotation.z = -o.side * o.t * (o.st === 1 ? 5 : 0); }
     else if (o.type === 'pickup') { y = 0.15 + Math.abs(Math.sin(o.t * 2.5)) * 0.25; g.rotation.y = o.t * 1.5; if (g.userData.ring) { g.userData.ring.position.y = 0.04 - y; g.userData.ring.scale.setScalar(1 + Math.sin(o.t * 5) * 0.08); } }
     else if (o.type === 'dog') {
-      var run = o.st === 1 || o.st === 2, off = o.st === 3 && Math.abs((o.fs < 0 ? 120 : 360) - o.x) > 2;
-      if (o.st === 1) g.rotation.y = Math.atan2(-(P.x - o.x), -Math.max(40, o.y - (G.cam + H - P.sy)));   // nose at the ride
-      else if (o.st === 2) g.rotation.y = Math.PI;                                                             // straight down the street
-      else if (o.st === 3) g.rotation.y = off ? (o.fs < 0 ? Math.PI / 2 : -Math.PI / 2) : Math.PI + Math.sin(o.t * 14) * 0.25;   // to the curb, then a happy wiggle
-      else g.rotation.y = o.side < 0 ? -Math.PI / 2 : Math.PI / 2;
-      y = run || off ? Math.abs(Math.sin(o.t * 20)) * 0.12 : 0;
+      // the model's nose points up the street; turn it to face where the dog is going (dx across, dy up the street)
+      var face = function (dx, dy) { return Math.atan2(-dx, dy); }, home = o.side < 0 ? 120 : 360;
+      if (o.st === 1 || o.st === 2) g.rotation.y = face(P.x - o.x, (G.cam + H - P.sy) - o.y + (o.st === 2 ? 60 : 0));   // at the ride; alongside it, mostly up the street
+      else if (o.st === 3) g.rotation.y = face(o.gx - o.x, o.gy - o.y);
+      else if (o.st === 4) g.rotation.y += Math.sin(o.t * 16) * 0.04;                                                       // a happy wiggle over its pizza
+      else if (o.st === 5 && Math.abs(home - o.x) > 2) g.rotation.y = face(home - o.x, 0);
+      else g.rotation.y = o.side < 0 ? -Math.PI / 2 : Math.PI / 2;                                                           // sitting, facing the road
+      y = o.st === 2 || o.st === 3 ? Math.abs(Math.sin(o.t * 20)) * 0.12 : o.st === 1 ? Math.abs(Math.sin(o.t * 9)) * 0.06 : 0;
     }
     else if (o.type === 'skater') g.rotation.y = Math.PI + Math.cos(o.t * 3) * 0.2;
     g.position.set(X(o.x), y, Z(o.y));
@@ -333,7 +335,7 @@ function syncPlayer(t, dt) {
 var BULB_ON = new THREE.Color('#fffbe0'), BULB_OFF = new THREE.Color('#ff8a1e');
 var pickupRingMat = new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.7, depthWrite: false });
 var lifeRingMat = new THREE.MeshBasicMaterial({ color: '#ff6b7d', transparent: true, opacity: 0.8, depthWrite: false });
-var AIM = { hand: ['#ffd23f', 0.95, 1.25], door: ['#7dff8a', 0.9, 1.1], window: ['#ff5964', 0.75, 1], wall: ['#ffffff', 0.32, 0.9] };
+var AIM = { hand: ['#ffd23f', 0.95, 1.25], dog: ['#ff9f1c', 0.95, 1.2], door: ['#7dff8a', 0.9, 1.1], window: ['#ff5964', 0.75, 1], wall: ['#ffffff', 0.32, 0.9] };
 
 function syncThrown(t) {
   var i, playing = G.state === 'play' || G.state === 'pause';
@@ -353,7 +355,7 @@ function syncThrown(t) {
     if (G.state !== 'play' || G.pizzas <= 0) { ring.visible = false; continue; }
     var a = aimAt(side);
     if (a.hit === 'far') { ring.visible = false; continue; }
-    var look = AIM[a.hit], pulse = a.hit === 'hand' || a.hit === 'door' ? 1 + Math.sin(t * 16) * 0.1 : 1;
+    var look = AIM[a.hit], pulse = a.hit === 'hand' || a.hit === 'door' || a.hit === 'dog' ? 1 + Math.sin(t * 16) * 0.1 : 1;
     ring.visible = true;
     ring.position.set(X(a.x) - side * 0.75, 0.35, Z(a.y));
     ring.material.color.set(look[0]); ring.material.opacity = look[1]; ring.scale.setScalar(look[2] * pulse);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { DOG_CHASE, H, MAX_LIVES, START_LIVES, STEP, VEH } from '../../src/config.js';
+import { DOG_ALERT, DOG_CHASE, DOG_JUMP, H, MAX_LIVES, START_LIVES, STEP, VEH } from '../../src/config.js';
 import { G, P } from '../../src/state.js';
 import { save } from '../../src/save.js';
 import { tune } from '../../src/tuning.js';
@@ -213,6 +213,10 @@ describe('throwing', () => {
 });
 
 describe('the bonus round', () => {
+  it('the testing switch goes straight to it', () => {
+    start(1, 0); G.opt.bonus = true; G.opt.day = 7; startRun();
+    expect(G.bonus).toBe(true); expect(G.state).toBe('play'); expect(G.obs.length).toBe(0);
+  });
   it('comes after Sunday, every house ordered, nothing is in the way, and pizza never runs out', () => {
     start(7, 0);
     G.stats.delivered = G.stats.orders; endShift();
@@ -248,43 +252,64 @@ describe('the bonus round', () => {
 
 describe('dogs', () => {
   // an empty street with one dog waiting at the left curb, a little way ahead
-  function dog(ride) {
+  function dog(ride, x) {
     start(5, ride || 0); G.obs = []; G.shieldLeft = 0;
     for (const l of G.lots) { l.cust = false; l.c = null; }
     const o = Object.assign(mk('dog', 114, py() + 420), { side: -1 }); G.obs.push(o);
-    P.x = P.tx = 200;
+    P.x = P.tx = x || 200;
     return o;
   }
-  const until = (f, max) => { let n = 0; while (G.state === 'play' && !f() && n++ < (max || 2000)) update(STEP); };
-  it('a dog runs at you for a moment, then keeps to that line instead of following you', () => {
-    const o = dog(); until(() => o.st === 1);
-    const x0 = o.x; until(() => o.st === 2);
-    expect(o.x).toBeGreaterThan(x0);                       // it came toward the ride
-    expect(o.ct).toBeGreaterThanOrEqual(DOG_CHASE);
-    const line = o.x; P.x = P.tx = 320; steps(90);         // swerve away: it does not follow
-    expect(o.x).toBe(line);
+  // step until f() is true, keeping traffic off the street so only the dog matters
+  const until = (f, max) => { let n = 0; while (G.state === 'play' && !f() && n++ < (max || 3000)) { G.obs = G.obs.filter(q => q.type === 'dog'); update(STEP); } };
+  it('it barks first, then jumps out from the side and runs alongside, closing in', () => {
+    const o = dog(0, 300); until(() => o.st === 1);
+    expect(o.y - py()).toBeLessThanOrEqual(DOG_ALERT); expect(o.x).toBe(114);
+    until(() => o.st === 2);
+    expect(o.y - py()).toBeLessThanOrEqual(DOG_JUMP);
+    steps(90);                                             // a second and a half later...
+    expect(Math.abs(o.y - (py() - 14))).toBeLessThan(8);   // ...it is level with the ride, just behind
+    const gap = P.x - o.x; steps(30);
+    expect(P.x - o.x).toBeLessThan(gap);                   // and still closing
     expect(G.lives).toBe(START_LIVES);
   });
-  it('it still wipes you out if you stay in its way', () => {
-    const o = dog(); until(() => G.lives < START_LIVES || !G.obs.includes(o));
-    expect(G.lives).toBe(START_LIVES - 1);
+  it('it catches you if you do nothing, bites once, and then gives up', () => {
+    const o = dog(); until(() => G.lives < START_LIVES);
+    expect(G.lives).toBe(START_LIVES - 1); expect(o.st).toBe(5);
+    let n = 0; until(() => n++ > 200);                     // long after the bite has worn off, it leaves you alone
+    expect(G.inv).toBeLessThanOrEqual(0); expect(G.lives).toBe(START_LIVES - 1);
   });
-  it('a pizza thrown its way sends it off to the curb, and then it cannot hurt you', () => {
-    const o = dog(); until(() => o.st === 1);
-    expect(dogOn(-1)).toBe(o); expect(dogOn(1)).toBeNull();
-    until(() => o.st === 2 && o.y - py() < 60);            // leave it late: it is in your lane and about to hit
+  it('it wears out if you keep away from it for long enough', () => {
+    const o = dog(0, 330); until(() => o.st === 5);
+    expect(G.lives).toBe(START_LIVES); expect(o.ct).toBeGreaterThanOrEqual(DOG_CHASE);
+  });
+  it('a pizza thrown at it when it is alongside hits it, and it stops to eat', () => {
+    const o = dog(0, 300); until(() => aimAt(-1).hit === 'dog');   // the aiming ring is on the dog
+    expect(dogOn(-1)).toBe(o); expect(dogOn(1)).toBeNull(); expect(aimAt(1).hit).not.toBe('dog');
     const had = G.pizzas, score = G.score;
-    throwPizza(-1);
-    expect(o.st).toBe(3); expect(G.pizzas).toBe(had - 1); expect(G.score).toBe(score + 25); expect(G.stats.fed).toBe(1);
-    until(() => !G.obs.includes(o));                       // ride straight through where it was
-    expect(G.lives).toBe(START_LIVES);
-    expect(o.x).toBe(120);                                 // it ended up at the curb
+    throwPizza(-1); until(() => o.st >= 3, 60);
+    expect(o.st).toBeGreaterThanOrEqual(3); expect(G.pizzas).toBe(had - 1); expect(G.score).toBe(score + 25); expect(G.stats.fed).toBe(1);
+    until(() => o.st === 4, 30); const at = [o.x, o.y];
+    P.x = P.tx = 150; until(() => !G.obs.includes(o));     // it stays with its pizza and cannot hurt you
+    expect([o.x, o.y]).toEqual(at); expect(G.lives).toBe(START_LIVES);
   });
-  it('a pizza thrown the other way, or at a dog that is not chasing, does nothing to it', () => {
-    let o = dog(); until(() => o.st === 1); throwPizza(1);
-    expect(o.st).toBe(1);
-    o = dog(); throwPizza(-1);
-    expect(o.st).toBe(0);
+  it('a pizza that lands on the ground nearby draws it away while it is still up the street', () => {
+    const o = dog(0, 300); until(() => o.st === 1);
+    throwPizza(-1); until(() => o.st >= 3, 120);           // no house ordered, so the pizza hits a wall or the lawn
+    expect(o.st).toBe(3); expect(G.stats.fed).toBe(1);
+    const spot = [o.gx, o.gy]; until(() => o.st === 4, 300);
+    expect([o.x, o.y]).toEqual(spot);
+    until(() => !G.obs.includes(o)); expect(G.lives).toBe(START_LIVES);
+  });
+  it('a pizza does nothing to a dog that has not seen you', () => {
+    const o = dog(); o.y += 200; throwPizza(-1); steps(40);   // the pizza has landed; the dog is still too far off to care
+    expect(G.pies.length).toBe(0); expect(o.st).toBe(0); expect(G.stats.fed).toBe(0);
+  });
+  it('a delivered pizza is not the dog\'s: it keeps coming', () => {
+    const o = dog(0, 300); until(() => o.st === 1);
+    const l = G.lots.find(x => x.side < 0 && Math.abs(x.doorY - o.y) < 400 && x.y0 > py());
+    l.cust = true; l.c = { type: 'porch', x: 107, y: l.doorY, by: l.doorY, hx: 107, cx: 121, ph: 0, happy: 0, wait: -1, gone: false };
+    until(() => aimAt(-1).hit === 'door' || aimAt(-1).hit === 'hand' || o.st !== 1, 400);
+    if (o.st === 1) { throwPizza(-1); until(() => l.delivered, 120); expect(l.delivered).toBe(true); expect(o.st).toBeLessThan(3); }
   });
   it('the van still bounces dogs off without a pizza', () => {
     const o = dog(3); until(() => o.out || G.lives < START_LIVES);

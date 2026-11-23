@@ -114,7 +114,7 @@ You start with three lives and a crash costs one. Lives carry into the next shif
 
 Traffic, cars backing out, hydrants and roadwork barriers hurt every ride. A puddle costs no life but makes the ride slide.
 
-A dog barks, runs at you for a moment, then keeps to that line. Swerve once, or throw a pizza toward its side and it goes after the pizza instead.
+A dog barks as you come up, jumps out from the curb and runs alongside, closing in. Throw it a pizza: an orange ring shows when it is close enough to hit, and a pizza that lands on the ground nearby draws it away too. Keep away from it for about three seconds and it wears out.
 
 A ring on each side of the street shows where a pizza thrown right now would land. It turns green over a front door and gold over a customer's hands.
 

@@ -146,7 +146,7 @@ export function drawStreetWords(){
       if(o.y<G.cam-60||o.y>G.cam+1300)continue;
       if(o.type==='dcar'&&o.st===1){q=G.project(o.x,o.y,40);T('!',q.x,q.y,18,'#ffd23f','center','#000');}
       else if(o.type==='dog'&&(o.st===1||o.st===2)&&o.t%0.6<0.3){q=G.project(o.x,o.y,34);T('GRR',q.x,q.y,11,'#fff','center','#000');}
-      else if(o.type==='dog'&&o.st===3){q=G.project(o.x,o.y,34);T('YUM',q.x,q.y,11,'#9cf07a','center','#000');}
+      else if(o.type==='dog'&&o.st===4){q=G.project(o.x,o.y,34);T('YUM',q.x,q.y,11,'#9cf07a','center','#000');}
       else if(o.type==='pickup'&&!G.bonus){q=G.project(o.x,o.y,34);T('PIZZA',q.x,q.y-Math.sin(o.t*5)*2,11,'#ffd23f','center','#000');}
       else if(o.type==='life'){q=G.project(o.x,o.y,44);T('+1 LIFE',q.x,q.y-Math.sin(o.t*5)*2,12,'#ff6b7d','center','#000');}
     }
