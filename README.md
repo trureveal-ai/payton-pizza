@@ -2,7 +2,7 @@
 
 An arcade pizza-delivery game for phones and keyboards. Payton rides down the street throwing pizzas: a pizza on the front door scores, and a pizza straight into the customer's hands scores more. Tips buy faster rides, from a hoverboard up to the Payton Pizza van.
 
-**Current version:** 0.2.0 · **Status:** in development, playable on the beta link · [Roadmap](ROADMAP.md)
+**Current version:** 0.3.0 · **Status:** in development, playable on the beta link · [Roadmap](ROADMAP.md)
 
 - **Beta (test copy):** https://trureveal-ai.github.io/payton-pizza/beta/
 - **Live:** https://trureveal-ai.github.io/payton-pizza/ (shows "coming soon" until v1.0.0)
@@ -24,7 +24,7 @@ An arcade pizza-delivery game for phones and keyboards. Payton rides down the st
 
 ## Features
 
-In v0.3.0 (on the beta address; v0.2.0 is the latest release):
+In v0.3.0:
 
 - A 3D street with houses on both sides and one fixed camera. Bright houses ordered; gray houses did not.
 - Front-door deliveries, hand-off bonuses with combos, and a heat bar that raises tips.
@@ -134,7 +134,7 @@ Versions follow [Semantic Versioning](https://semver.org). Each phase of the bui
 | --- | --- | --- | --- | --- |
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | Beta | Released |
 | v0.2.0 | 2 | 3D core and controls | Beta | Released |
-| v0.3.0 | 3 | Deeper gameplay | Beta | Planned |
+| v0.3.0 | 3 | Deeper gameplay | Beta | Released |
 | v0.4.0 | 4 | 3D world and rides | Beta | Planned |
 | v0.5.0 | 5 | Characters and polish | Beta | Planned |
 | v0.6.0 | 6 | Music and sound | Beta | Planned |
@@ -151,6 +151,7 @@ Releases are automatic: when `VERSION` changes on `main`, the release workflow r
 
 See [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.0:** Continue, extra lives, ride perks, new customers and hazards, dogs that chase from the side and can be stopped with a pizza, a bonus round after Sunday, and an easier week.
 - **0.2.0:** the game moved to a 3D street with one fixed camera, seeded streets, forgiving tap-to-throw, aiming rings and the Gun-Metal Black Bimmer.
 - **0.1.0:** the prototype moved into this repo, split into modules, with tests, CI, automatic releases and a beta deploy.
 

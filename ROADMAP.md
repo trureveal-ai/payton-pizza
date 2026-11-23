@@ -9,7 +9,7 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 | — | 0 | Groundwork and spikes | Spikes pass, or the plan changes with Cam's OK | Nothing | Done 2026-11-22 |
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | CI passes, release published, beta plays like the prototype on phone and PC | Beta | Released 2026-11-22; Cam played it on his phone 2026-11-23 |
 | v0.2.0 | 2 | 3D core and controls: seeded streets, a 3D street in simple shapes, one fixed camera, wider street and view, forgiving tap-to-throw, front-door deliveries made reachable, the Bimmer | Replays are deterministic; smooth on Cam's phone; Cam approves the camera, the street width and the controls | Beta | Released 2026-11-23 after Cam's review on his iPhone |
-| v0.3.0 | 3 | Deeper gameplay: lives made clearer with Continue and extra-life pickups, ride perks, new customers, bonus round, more hazards, tuning | Cam approves the difficulty after a full week of shifts, and each ride feels worth its price | Beta | On beta for Cam's review since 2026-11-23 |
+| v0.3.0 | 3 | Deeper gameplay: lives made clearer with Continue and extra-life pickups, ride perks, new customers, bonus round, more hazards, tuning | Cam approves the difficulty after a full week of shifts, and each ride feels worth its price | Beta | Released 2026-11-23; Cam played it on beta and approved the difficulty, the dogs and the bonus round |
 | v0.4.0 | 4 | 3D world and rides: finished look for the street, houses, props, traffic and all four rides; day and dusk | Smooth on Cam's phone on the busiest street; Cam approves the look | Beta | Planned |
 | v0.5.0 | 5 | Characters and polish: Payton, customers, effects, menus, tutorial, settings | Cam approves the characters and the menus | Beta | Planned |
 | v0.6.0 | 6 | Music and sound | Cam approves the sound on his phone | Beta | Planned |
@@ -45,6 +45,13 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **Dogs:** he likes dogs chasing but not that they shadowed the ride, and wanted a way to stop them. After trying a first version (a short dash, then a straight line) he asked for this instead: the dog jumps out from the side, chases and catches up unless you throw a pizza; close enough alongside, the pizza can hit it; either way the dog goes to a pizza and eats. Running a dog over stays the van's perk.
 - **Perks:** he asked for a short description of each ride's perks. The garage cards and the shift banner now spell them out.
 - **Continue:** works as he expected, and he likes that the bank is not affected. Kept as built.
+- **Difficulty:** Wednesday to Sunday is "just right"; Sunday is left alone. The balls stay as they are.
+- **Bonus round:** he likes that it is brief, all timing, with few obstacles and a chance at maximum points and dollars. Kept as built.
+
+## Asked for, not yet scheduled (2026-11-23)
+
+- **More rides in the garage.** Cam wants the garage to grow beyond the four rides. Proposed for Phase 4, where every ride gets its finished model (issue #64).
+- **Neighborhoods that look different from week to week.** Proposed for Phase 4, where the street's finished look is built, so each week's look is designed in from the start (issue #65).
 
 ## The 2D version
 
