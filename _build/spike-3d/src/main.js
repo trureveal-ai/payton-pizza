@@ -642,7 +642,16 @@ function frame(now) {
   const C = CAMS[S.cam];
   camX += (P.x * 0.55 - camX) * Math.min(1, dt * 5);
   camera.position.set(camX, C.up, camZ + C.back);
-  camera.lookAt(camX * 0.85, C.lookY, camZ - C.ahead);
+  if (C.name === 'Top-down') {
+    // looking almost straight down: keep "up the street" pointing up the screen so steering never turns the view
+    // and keep the whole street centred, as in the 2D game
+    camera.up.set(0, 0, -1);
+    camera.position.x = 0;
+    camera.lookAt(0, C.lookY, camZ - C.ahead);
+  } else {
+    camera.up.set(0, 1, 0);
+    camera.lookAt(camX * 0.85, C.lookY, camZ - C.ahead);
+  }
 
   renderer.render(scene, camera);
 
