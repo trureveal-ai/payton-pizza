@@ -38,5 +38,8 @@ export function sfx(n){
   else if(n==='buy'){tone(523,0.08,'square',0.06);tone(659,0.08,'square',0.06,null,0.08);tone(784,0.08,'square',0.06,null,0.16);tone(1046,0.22,'square',0.06,null,0.24);}
   else if(n==='win'){tone(523,0.1,'square',0.06);tone(659,0.1,'square',0.06,null,0.1);tone(784,0.1,'square',0.06,null,0.2);tone(1046,0.3,'square',0.06,null,0.3);}
   else if(n==='shield'){tone(300,0.2,'triangle',0.1,600);}
+  else if(n==='bonk'){tone(260,0.07,'square',0.06,150);}
+  else if(n==='splash'){noise(0.2,0.1);}
+  else if(n==='life'){tone(660,0.08,'square',0.07);tone(990,0.08,'square',0.07,null,0.08);tone(1320,0.2,'square',0.07,null,0.16);}
 }
 

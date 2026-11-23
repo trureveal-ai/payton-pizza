@@ -1,11 +1,11 @@
 // The overlay: HUD, menu screens, pop-up words and sparks. The street itself is drawn in 3D by render3d.js.
-import { DAYS, H, VEH, W } from './config.js';
+import { DAYS, H, MAX_LIVES, VEH, W } from './config.js';
 import { clamp } from './util.js';
 import { G, P } from './state.js';
 import { save, writeSave } from './save.js';
 import { ctx, cv, view } from './canvas.js';
 import { sfx } from './audio.js';
-import { startRun, startShift, toTitle } from './game.js';
+import { continueRun, nextShift, startRun, toTitle } from './game.js';
 
 export function R(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
 export function circ(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();}
@@ -79,33 +79,43 @@ export function drawVeh(i,x,y,arm,side,t){
     if(arm>0){R(side>0?x+14:x-22,y-18,8,4,'#f2c9a0');}
   }
 }
-export function heart(x,y,on){var c=on?'#ff3b4e':'#4a4d57';circ(x-4,y-2,5,c);circ(x+4,y-2,5,c);tri(x-9,y,x+9,y,x,y+10,c);}
+export function heart(x,y,on,k){k=k||1;var c=on?'#ff3b4e':'#4a4d57';circ(x-4*k,y-2*k,5*k,c);circ(x+4*k,y-2*k,5*k,c);tri(x-9*k,y,x+9*k,y,x,y+10*k,c);}
+// a row of hearts: the three a run starts with, plus any extra lives picked up (up to five)
+export function hearts(x,y,gap,k){var n=Math.min(MAX_LIVES,Math.max(3,G.lives));for(var i=0;i<n;i++)heart(x+i*gap,y,i<G.lives,k);return n;}
 export function pad(n,w){var s=String(n);while(s.length<w)s='0'+s;return s;}
 export function drawHUD(){
   R(0,0,W,60,'rgba(15,16,22,0.9)');
   T('SCORE',10,14,11,'#9aa3b2');T(pad(G.score,6),10,32,20,'#fff');
   var wk=Math.floor((G.day-1)/7)+1;
   T(DAYS[(G.day-1)%7].slice(0,3)+(wk>1?' WK'+wk:''),W/2,14,13,'#ffd23f','center');
-  T('ORDERS '+G.stats.delivered+'/'+G.stats.orders,W/2,33,13,G.stats.missed?'#ffb4b4':'#cfd6e3','center');
+  T((G.bonus?'PARTY ':'ORDERS ')+G.stats.delivered+'/'+G.stats.orders,W/2,33,13,G.stats.missed&&!G.bonus?'#ffb4b4':'#cfd6e3','center');
   T('$'+save.bank,W-86,32,16,'#9cf07a','right');
   // pause + mute
   RR(W-76,6,32,30,6,'#2a2e3a');R(W-66,13,4,16,'#fff');R(W-58,13,4,16,'#fff');
   RR(W-38,6,32,30,6,'#2a2e3a');T(save.mute?'OFF':'SND',W-22,21,10,save.mute?'#ff8a8a':'#fff','center');
-  for(var i=0;i<3;i++)heart(22+i*24,50,i<G.lives);
-  pizzaBox(108,51,7);T('x'+G.pizzas,120,51,15,G.pizzas===0?'#ff5964':G.pizzas<=2?'#ffd23f':'#fff');
+  hearts(18,50,20,G.lifeFlash>0?0.82+0.3*Math.abs(Math.sin(G.lifeFlash*14)):0.82);
+  pizzaBox(126,51,7);T(G.bonus?'FREE':'x'+G.pizzas,138,51,15,G.bonus?'#9cf07a':G.pizzas===0?'#ff5964':G.pizzas<=2?'#ffd23f':'#fff');
   // G.heat bar
-  T('HOT',176,51,11,'#ff9f1c');
-  R(204,45,180,12,'#2a2e3a');
+  T('HOT',190,51,11,'#ff9f1c');
+  R(216,45,168,12,'#2a2e3a');
   var hc=G.heat>60?'#ff5a1f':G.heat>25?'#ff9f1c':'#5a8dd6';
-  R(206,47,176*G.heat/100,8,hc);
+  R(218,47,164*G.heat/100,8,hc);
   T('TIP x'+(1+G.heat/100).toFixed(1),W-10,51,12,'#fff','right');
 
 }
 export function drawBanner(){
   var a=clamp(G.bannerT,0,1);ctx.globalAlpha=a;
-  R(0,300,W,96,'rgba(15,16,22,0.82)');
-  T(DAYS[(G.day-1)%7],W/2,332,34,'#ffd23f','center','#000');
-  T(G.stats.orders+' ORDERS  -  DELIVER AT LEAST HALF',W/2,372,14,'#fff','center');
+  R(0,292,W,132,'rgba(15,16,22,0.82)');
+  if(G.bonus){
+    T('PIZZA PARTY!',W/2,328,34,'#ffd23f','center','#000');
+    T('BONUS ROUND  -  EVERY HOUSE ORDERED',W/2,366,14,'#fff','center');
+    T('Free pizza. Double tips. Nothing in the way.',W/2,398,13,'#9cf07a','center');
+  }else{
+    T(DAYS[(G.day-1)%7],W/2,326,34,'#ffd23f','center','#000');
+    T(G.stats.orders+' ORDERS  -  DELIVER AT LEAST HALF',W/2,364,14,'#fff','center');
+    var n=Math.min(MAX_LIVES,Math.max(3,G.lives));
+    T('LIVES',W/2-n*11-12,399,13,'#cfd6e3','right');hearts(W/2-n*11+10,397,22,1);
+  }
   ctx.globalAlpha=1;
 }
 export function drawHint(){
@@ -135,11 +145,16 @@ export function drawStreetWords(){
       if(o.y<G.cam-60||o.y>G.cam+1300)continue;
       if(o.type==='dcar'&&o.st===1){q=G.project(o.x,o.y,40);T('!',q.x,q.y,18,'#ffd23f','center','#000');}
       else if(o.type==='dog'&&o.st===1&&o.t%0.6<0.3){q=G.project(o.x,o.y,34);T('GRR',q.x,q.y,11,'#fff','center','#000');}
-      else if(o.type==='pickup'){q=G.project(o.x,o.y,34);T('+5',q.x,q.y-Math.sin(o.t*5)*2,13,'#ffd23f','center','#000');}
+      else if(o.type==='pickup'&&!G.bonus){q=G.project(o.x,o.y,34);T('PIZZA',q.x,q.y-Math.sin(o.t*5)*2,11,'#ffd23f','center','#000');}
+      else if(o.type==='life'){q=G.project(o.x,o.y,44);T('+1 LIFE',q.x,q.y-Math.sin(o.t*5)*2,12,'#ff6b7d','center','#000');}
     }
     for(i=0;i<G.lots.length;i++){var l=G.lots[i];
-      if(!l.cust||l.delivered||l.missed||l.c.type!=='pacer'||l.y0<G.cam-260||l.y0>G.cam+1300)continue;
-      q=G.project(l.c.x,l.c.y,62);T('!',q.x,q.y,14,'#ffd23f','center','#000');
+      if(!l.cust||l.delivered||l.missed||l.y0<G.cam-260||l.y0>G.cam+1300)continue;
+      if(l.c.type==='pacer'){q=G.project(l.c.x,l.c.y,62);T('!',q.x,q.y,14,'#ffd23f','center','#000');}
+      else if(l.c.type==='quit'&&!l.c.gone&&l.c.wait>=0){   // how long before they give up and go inside
+        q=G.project(l.c.x,l.c.y,62);var left=clamp(l.c.wait/G.T.patience,0,1);
+        R(q.x-13,q.y-4,26,7,'rgba(15,16,22,0.85)');R(q.x-12,q.y-3,24*left,5,left>0.4?'#ffd23f':'#ff5964');
+      }
     }
     if(G.streak>=2){q=G.project(P.x+G.V.w/2+16,G.cam+H-P.sy,30);T('x'+Math.min(G.streak,5),q.x,q.y,15,'#ffd23f','center','#000');}
   }
@@ -176,8 +191,14 @@ export function drawTitle(){
   ctx.restore();
   slice(W/2,292+b,26);
   T('HOT. FAST. HAND-DELIVERED.',W/2,352,15,'#fff','center','#000');
-  btn(90,392,300,62,'START SHIFT',function(){sfx('ui');startRun();},{primary:true,size:24,key:'Enter'});
-  btn(90,470,300,52,'GARAGE   $'+save.bank,function(){sfx('ui');G.garageFrom='title';G.state='garage';},{key:'KeyG'});
+  if(save.cont>1&&G.opt.day==null){
+    btn(90,378,300,58,'CONTINUE  '+DAYS[(save.cont-1)%7].slice(0,3)+' (DAY '+save.cont+')',function(){sfx('ui');continueRun();},{primary:true,size:19,key:'Enter'});
+    btn(90,444,300,42,'NEW RUN FROM MONDAY',function(){sfx('ui');startRun();},{size:15,key:'KeyN'});
+    btn(90,494,300,44,'GARAGE   $'+save.bank,function(){sfx('ui');G.garageFrom='title';G.state='garage';},{size:16,key:'KeyG'});
+  }else{
+    btn(90,392,300,62,'START SHIFT',function(){sfx('ui');startRun();},{primary:true,size:24,key:'Enter'});
+    btn(90,470,300,52,'GARAGE   $'+save.bank,function(){sfx('ui');G.garageFrom='title';G.state='garage';},{key:'KeyG'});
+  }
   RR(40,548,400,150,12,'rgba(15,16,22,0.85)');
   T('HOW TO PLAY',W/2,568,14,'#ffd23f','center');
   T('Pizza on the FRONT DOOR = points',W/2,592,13,'#fff','center');
@@ -195,28 +216,50 @@ export function receipt(x,y,w,h){
 export function row(label,val,y,col){T(label,84,y,15,'#3a2a20');T(val,W-84,y,15,col||'#3a2a20','right');}
 export function dash(y){ctx.fillStyle='#b9a98f';for(var x=84;x<W-84;x+=10)ctx.fillRect(x,y,6,2);}
 export function drawReport(){
-  receipt(60,90,360,520);
-  slice(W/2,128,13);
-  T('PAYTON PIZZA',W/2,166,22,'#b3001b','center');
-  T(DAYS[(G.day-1)%7]+' SHIFT TICKET',W/2,190,13,'#3a2a20','center');
-  dash(208);
-  row('ORDERS DELIVERED',G.stats.delivered+' / '+G.stats.orders,236);
-  row('  HAND-OFFS',String(G.stats.hand),262,'#b3001b');
-  row('  FRONT DOORS',String(G.stats.door),288);
-  row('MISSED ORDERS',String(G.stats.missed),314,G.stats.missed?'#b3001b':'#3a2a20');
-  row('WINDOWS SMASHED',String(G.stats.smash),340,G.stats.smash?'#b3001b':'#3a2a20');
-  row('WIPEOUTS',String(G.stats.crashes),366,G.stats.crashes?'#b3001b':'#3a2a20');
-  dash(386);
-  row('TIPS',(G.stats.tips<0?'-$'+(-G.stats.tips):'$'+G.stats.tips),412);
-  row('SHIFT PAY','$'+G.report.pay,438);
-  if(G.report.perfect)row('PERFECT SHIFT','$'+G.report.perfect,464,'#1f7a3f');
-  dash(484);
-  row('BANK','$'+save.bank,510,'#1f7a3f');
-  row('SCORE',pad(G.score,6),536);
-  T(G.report.title,W/2,576,17,'#b3001b','center');
-  if(G.report.healed)T('+1 LIFE',W/2,640,14,'#ff8a8a','center','#000');
+  var wk=G.day%7===0;
+  receipt(60,78,360,558);
+  slice(W/2,116,13);
+  T('PAYTON PIZZA',W/2,154,22,'#b3001b','center');
+  if(G.report.bonus){
+    T('PIZZA PARTY TICKET',W/2,178,13,'#3a2a20','center');
+    dash(196);
+    row('HOUSES SERVED',G.stats.delivered+' / '+G.stats.orders,226);
+    row('  HAND-OFFS',String(G.stats.hand),254,'#b3001b');
+    row('  FRONT DOORS',String(G.stats.door),282);
+    row('WINDOWS SMASHED',String(G.stats.smash),310,G.stats.smash?'#b3001b':'#3a2a20');
+    dash(334);
+    row('TIPS (DOUBLE)',(G.stats.tips<0?'-$'+(-G.stats.tips):'$'+G.stats.tips),362);
+    row('PARTY PAY','$'+G.report.pay,390);
+    if(G.report.perfect)row('EVERY HOUSE SERVED','$'+G.report.perfect,418,'#1f7a3f');
+    dash(446);
+    row('BANK','$'+save.bank,474,'#1f7a3f');
+    row('SCORE',pad(G.score,6),502);
+    T(G.report.title,W/2,560,17,'#b3001b','center');
+    btn(60,664,170,58,'GARAGE',function(){sfx('ui');G.garageFrom='report';G.state='garage';},{key:'KeyG'});
+    btn(250,664,170,58,'NEXT WEEK',function(){sfx('ui');nextShift();},{primary:true,key:'Enter'});
+    return;
+  }
+  T(DAYS[(G.day-1)%7]+' SHIFT TICKET',W/2,178,13,'#3a2a20','center');
+  dash(196);
+  row('ORDERS DELIVERED',G.stats.delivered+' / '+G.stats.orders,222);
+  row('  HAND-OFFS',String(G.stats.hand),248,'#b3001b');
+  row('  FRONT DOORS',String(G.stats.door),274);
+  row('MISSED ORDERS',String(G.stats.missed),300,G.stats.missed?'#b3001b':'#3a2a20');
+  row('WINDOWS SMASHED',String(G.stats.smash),326,G.stats.smash?'#b3001b':'#3a2a20');
+  row('WIPEOUTS',String(G.stats.crashes),352,G.stats.crashes?'#b3001b':'#3a2a20');
+  dash(372);
+  row('TIPS',(G.stats.tips<0?'-$'+(-G.stats.tips):'$'+G.stats.tips),398);
+  row('SHIFT PAY','$'+G.report.pay,424);
+  if(G.report.perfect)row('PERFECT SHIFT','$'+G.report.perfect,450,'#1f7a3f');
+  dash(470);
+  row('BANK','$'+save.bank,496,'#1f7a3f');
+  row('SCORE',pad(G.score,6),522);
+  // lives carry into the next shift
+  T('LIVES'+(G.report.healed?'  (+1 FOR FINISHING)':''),84,552,15,'#3a2a20');
+  var n=Math.min(MAX_LIVES,Math.max(3,G.lives));hearts(W-84-(n-1)*20-6,550,20,0.8);
+  T(G.report.title,W/2,596,17,'#b3001b','center');
   btn(60,664,170,58,'GARAGE',function(){sfx('ui');G.garageFrom='report';G.state='garage';},{key:'KeyG'});
-  btn(250,664,170,58,'NEXT SHIFT',function(){sfx('ui');G.day++;startShift();},{primary:true,key:'Enter'});
+  btn(250,664,170,58,wk?'BONUS ROUND':'NEXT SHIFT',function(){sfx('ui');nextShift();},{primary:true,size:wk?16:18,key:'Enter'});
 }
 export function drawOver(){
   T(G.overWhy==='fired'?'YOU\'RE FIRED':'WIPED OUT',W/2,180,46,'#ff4d2e','center','#000');
@@ -227,10 +270,17 @@ export function drawOver(){
   T('REACHED',110,382,15,'#9aa3b2');T(DAYS[(G.day-1)%7].slice(0,3)+' (DAY '+G.day+')',370,382,16,'#fff','right');
   T('BANK',110,420,15,'#9aa3b2');T('$'+save.bank,370,420,22,'#9cf07a','right');
   if(G.newHi)T('NEW HIGH SCORE!',W/2,452,14,'#ffd23f','center');
-  T('Your bank and rides are kept.',W/2,500,13,'#cfd6e3','center');
-  btn(90,540,300,62,'TRY AGAIN',function(){sfx('ui');startRun();},{primary:true,size:24,key:'Enter'});
-  btn(90,618,300,52,'GARAGE',function(){sfx('ui');G.garageFrom='title';G.state='garage';},{key:'KeyG'});
-  btn(90,684,300,46,'TITLE',function(){sfx('ui');toTitle();},{size:15,key:'Escape'});
+  if(G.day>1&&G.opt.day==null){
+    T('Continue keeps your day, bank and rides.',W/2,494,13,'#cfd6e3','center');
+    T('Your score starts again from zero.',W/2,514,13,'#cfd6e3','center');
+    btn(90,540,300,62,'CONTINUE  '+DAYS[(G.day-1)%7],function(){sfx('ui');continueRun();},{primary:true,size:21,key:'Enter'});
+    btn(90,616,300,46,'NEW RUN FROM MONDAY',function(){sfx('ui');startRun();},{size:15,key:'KeyN'});
+  }else{
+    T('Your bank and rides are kept.',W/2,500,13,'#cfd6e3','center');
+    btn(90,540,300,62,'TRY AGAIN',function(){sfx('ui');startRun();},{primary:true,size:24,key:'Enter'});
+  }
+  btn(90,G.day>1&&G.opt.day==null?674:618,145,46,'GARAGE',function(){sfx('ui');G.garageFrom='title';G.state='garage';},{size:15,key:'KeyG'});
+  btn(245,G.day>1&&G.opt.day==null?674:618,145,46,'TITLE',function(){sfx('ui');toTitle();},{size:15,key:'Escape'});
 }
 export function drawGarage(){
   ctx.fillStyle='#22262f';for(var y=0;y<H;y+=40)ctx.fillRect(0,y,W,2);
@@ -244,14 +294,15 @@ export function drawGarage(){
     ctx.save();ctx.translate(82,cy+73);ctx.scale(1.7,1.7);drawVeh(i,0,0,0,1,G.tGame);ctx.restore();
     T(v.name,152,cy+26,18,'#fff');
     T(v.blurb[0],152,cy+50,12,'#cfd6e3');T(v.blurb[1],152,cy+66,12,'#cfd6e3');
-    T('SPEED',152,cy+90,11,'#9aa3b2');
-    for(var k=0;k<6;k++)R(196+k*11,cy+85,8,10,k<Math.round((v.spd-0.9)*14)?'#ff9f1c':'#3a3f4d');
-    T('CARRY '+v.cap,280,cy+90,11,'#9aa3b2');
+    T(v.perkText,152,cy+80,11,'#5ad1ff');
+    T('SPEED',152,cy+94,11,'#9aa3b2');
+    for(var k=0;k<6;k++)R(196+k*11,cy+89,8,10,k<Math.round((v.spd-0.9)*14)?'#ff9f1c':'#3a3f4d');
+    T('CARRY '+v.cap,280,cy+94,11,'#9aa3b2');
     (function(i,v){
-      if(sel)btn(152,cy+102,300,36,'RIDING',null,{disabled:true,size:15});
-      else if(own)btn(152,cy+102,300,36,'RIDE THIS',function(){save.ride=i;G.V=VEH[i];writeSave();sfx('ui');},{size:15,key:'Digit'+(i+1)});
-      else if(save.bank>=v.price)btn(152,cy+102,300,36,'BUY  $'+v.price,function(){save.bank-=v.price;save.owned[i]=true;save.ride=i;G.V=VEH[i];writeSave();sfx('buy');},{primary:true,size:15,key:'Digit'+(i+1)});
-      else btn(152,cy+102,300,36,'$'+v.price+'  (NEED $'+(v.price-save.bank)+' MORE)',null,{disabled:true,size:13});
+      if(sel)btn(152,cy+104,300,34,'RIDING',null,{disabled:true,size:15});
+      else if(own)btn(152,cy+104,300,34,'RIDE THIS',function(){save.ride=i;G.V=VEH[i];writeSave();sfx('ui');},{size:15,key:'Digit'+(i+1)});
+      else if(save.bank>=v.price)btn(152,cy+104,300,34,'BUY  $'+v.price,function(){save.bank-=v.price;save.owned[i]=true;save.ride=i;G.V=VEH[i];writeSave();sfx('buy');},{primary:true,size:15,key:'Digit'+(i+1)});
+      else btn(152,cy+104,300,34,'$'+v.price+'  (NEED $'+(v.price-save.bank)+' MORE)',null,{disabled:true,size:13});
     })(i,v);
   }
   btn(140,726,200,54,'BACK',function(){sfx('ui');G.state=G.garageFrom==='report'?'report':'title';if(G.state==='title')toTitle();},{primary:true,key:'Escape'});

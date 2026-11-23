@@ -37,6 +37,8 @@ The rules draw every random number from `src/rng.js` and advance in fixed steps 
 
 `tests/tools/sim.js` plays the rules with no screen. `tests/fixtures/streets.json` holds recorded inputs and results for the five test streets (T5 once per ride), each as a normal run and as a full-length run that rides through hazards. `tests/unit/streets.test.js` replays them.
 
+`npm run measure` has the automatic player ride twelve streets for each of nine days and prints how many it finished and delivered. Run it before and after a change to `src/tuning.js` and put both in the changelog. The automatic player steers worse than a person, so read it as a direction, not a score.
+
 If a rule changes on purpose, the recordings no longer match. Run `npm run record`, check the printed results make sense, commit the new fixture and say so in the changelog.
 
 ### Testing switches
@@ -46,7 +48,7 @@ Add these to the page address. None of them is saved.
 | Switch | What it does |
 | --- | --- |
 | `?seed=1001` | Plays that street instead of the day's own |
-| `?day=14` | Starts on that day |
+| `?day=14` | Starts on that day. Continue is hidden and the saved Continue day is left alone |
 | `?ride=3` | Rides that ride (0 hoverboard, 1 dirt bike, 2 Bimmer, 3 van) without owning it |
 | `?fps=1` | Shows the frame-rate readout (the F key toggles it) |
 | `?shadows=0` | Turns shadows off |
@@ -70,7 +72,8 @@ Rollback: re-run the Deploy workflow from the previous good commit.
 | `src/state.js` | `G`, the shared object for everything that changes during play |
 | `src/config.js` | Fixed numbers: rides, street geometry, landing sizes, step length, palettes |
 | `src/rng.js` | Seeded random numbers and each day's street seed |
-| `src/world.js` | Builds a street for a shift |
+| `src/world.js` | Builds a street for a shift, and the bonus round's street |
+| `src/tuning.js` | Every number that changes with the day: speed, street length, hazards, traffic, customers, pickups |
 | `src/game.js` | Rules and the per-step update |
 | `src/render3d.js` | The 3D street and its fixed camera (Three.js). Reads the state, never changes it |
 | `src/models.js` | 3D shapes, each built in code and merged into one mesh |

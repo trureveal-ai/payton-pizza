@@ -26,7 +26,7 @@ function begin(street, ghost) {
 function result() {
   var s = G.stats;
   return { end: G.state, why: G.state === 'over' ? G.overWhy : '', steps: G.step, score: G.score, lives: G.lives,
-    orders: s.orders, delivered: s.delivered, hand: s.hand, door: s.door, missed: s.missed, smash: s.smash, crashes: s.crashes,
+    orders: s.orders, delivered: s.delivered, hand: s.hand, door: s.door, missed: s.missed, smash: s.smash, crashes: s.crashes, bonks: s.bonks,
     x: Math.round(P.x * 1000) / 1000, cam: Math.round(G.cam * 1000) / 1000 };
 }
 function apply(e) {
@@ -58,11 +58,15 @@ export function record(street, ghost) {
     var cost = Math.abs(lx - 240) * 0.004, lo = Math.min(lx, P.x), hi = Math.max(lx, P.x);
     for (var j = 0; j < G.obs.length; j++) {
       var q = G.obs[j], ahead = q.y - py, closing = G.speed - q.vy;
-      if (ahead < -70 || closing <= 5) continue;
+      if (q.out || ahead < -70 || closing <= 5) continue;
       var t = Math.max(0, ahead - 45) / closing;
       if (t > 2.5) continue;
       var ox = q.x, need = (q.w + G.V.w) / 2 + 12;
       if (q.type === 'pickup') { if (G.pizzas <= G.V.cap - 3 && Math.abs(ox - lx) < 10) cost -= 0.5; continue; }
+      if (q.type === 'life') { if (Math.abs(ox - lx) < 10) cost -= 0.8; continue; }
+      if (q.type === 'puddle') { if (Math.abs(ox - lx) < need) cost += 0.4 / (t + 0.1); continue; }
+      if (G.V.perk.indexOf(q.type) >= 0) continue;                               // this ride shrugs it off
+      if (q.type === 'ball') { ox = q.st === 1 ? q.x - q.side * 95 * t : 240; need += q.st === 1 ? 14 : 70; }
       if (q.type === 'dcar' && q.st < 3) { ox = 240; need += 90; }
       else if (q.type === 'dog') need += 30 + 125 * Math.min(t, 0.5);
       else if (q.type === 'skater') need += 10;

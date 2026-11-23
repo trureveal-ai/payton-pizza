@@ -223,13 +223,16 @@ function syncLots(t) {
       if (o.wins[k]) o.wins[k].visible = on;
     }
     if (!o.person) continue;
-    o.person.visible = on; o.marker.visible = on;
+    var c = l.c, inside = c.gone && c.goneT > 0.45 && !l.delivered;
+    o.person.visible = on && !inside; o.marker.visible = on;
     if (!on) continue;
-    var c = l.c, hop = c.happy > 0 ? Math.abs(Math.sin(c.happy * 12)) * 0.45 : 0, porch = c.type === 'porch' ? 0.22 : 0;
+    var wallX = l.side < 0 ? WALL_L : WALL_R, hop = c.happy > 0 ? Math.abs(Math.sin(c.happy * 12)) * 0.45 : 0, porch = Math.abs(c.x - wallX) < 20 ? 0.22 : 0;
     o.person.position.set(X(c.x), porch + hop, Z(c.y));
     var faceRoad = l.side < 0 ? 0 : Math.PI;
     if (l.missed) { o.person.rotation.y = faceRoad + Math.PI; o.arms.rotation.z = -1.35; o.box.visible = false; }
     else if (l.delivered) { o.person.rotation.y = faceRoad; o.arms.rotation.z = 0.05; o.box.visible = true; }
+    else if (c.gone) { o.person.rotation.y = faceRoad + Math.PI; o.arms.rotation.z = -1.35; o.box.visible = false; }
+    else if (c.type === 'quit') { o.person.rotation.y = faceRoad + Math.sin(t * 6 + c.ph) * 0.25; o.arms.rotation.z = -0.9; o.box.visible = false; }   // arms down, looking about
     else { o.person.rotation.y = faceRoad; o.arms.rotation.z = 0.45 + Math.sin(t * 9 + c.ph) * 0.35; o.box.visible = false; }
     var mk = l.delivered ? 'done' : l.missed ? 'missed' : 'order';
     if (o.marker.material !== markerMat[mk]) o.marker.material = markerMat[mk];
@@ -245,6 +248,14 @@ function makeObs(o) {
   else if (t === 'hydrant') g.add(mesh(cached('hydrant', M.hydrantGeo)));
   else if (t === 'cone') g.add(mesh(cached('cone', M.coneGeo)));
   else if (t === 'pothole') g.add(mesh(cached('pothole', M.potholeGeo), toon, false));
+  else if (t === 'puddle') g.add(mesh(cached('puddle', M.puddleGeo), toon, false));
+  else if (t === 'barrier') g.add(mesh(cached('barrier', M.barrierGeo)));
+  else if (t === 'ball') g.add(mesh(cached('ball|' + o.col, function () { return M.ballGeo(o.col); })));
+  else if (t === 'life') {
+    m = mesh(cached('heart', M.heartGeo)); m.scale.setScalar(1.25); m.position.y = 0.9; g.add(m); g.userData.spin = m;
+    var lr = new THREE.Mesh(cached('pickupRing', function () { return new THREE.RingGeometry(0.75, 0.95, 24); }), lifeRingMat);
+    lr.rotation.x = -Math.PI / 2; lr.position.y = 0.04; g.add(lr); g.userData.ring = lr;
+  }
   else if (t === 'dog') g.add(mesh(cached('dog|' + o.col, function () { return M.dogGeo(o.col); })));
   else if (t === 'carD' || t === 'carU' || t === 'dcar') {
     m = mesh(cached('car|' + o.col, function () { return M.carGeo(o.col); })); m.scale.setScalar(0.74); g.add(m);
@@ -271,7 +282,10 @@ function syncObs() {
     if (!e) { e = makeObs(o); obsMap.set(o, e); }
     e.stamp = stamp;
     var g = e.g, y = 0;
-    if (o.type === 'pickup') { y = 0.15 + Math.abs(Math.sin(o.t * 2.5)) * 0.25; g.rotation.y = o.t * 1.5; if (g.userData.ring) { g.userData.ring.position.y = 0.04 - y; g.userData.ring.scale.setScalar(1 + Math.sin(o.t * 5) * 0.08); } }
+    if (o.out) { y = 0.4 + Math.sin(Math.min(1, o.t * 1.6) * Math.PI) * 1.6; g.rotation.x = o.t * 9; g.rotation.z = o.t * 6; }   // knocked aside: it tumbles away
+    else if (o.type === 'life') { g.userData.spin.rotation.y = o.t * 2.4; g.userData.spin.position.y = 0.9 + Math.sin(o.t * 4) * 0.15; g.userData.ring.scale.setScalar(1 + Math.sin(o.t * 5) * 0.1); }
+    else if (o.type === 'ball') { y = o.st === 1 ? Math.abs(Math.sin(o.t * 7)) * 0.5 : 0; g.rotation.z = -o.side * o.t * (o.st === 1 ? 5 : 0); }
+    else if (o.type === 'pickup') { y = 0.15 + Math.abs(Math.sin(o.t * 2.5)) * 0.25; g.rotation.y = o.t * 1.5; if (g.userData.ring) { g.userData.ring.position.y = 0.04 - y; g.userData.ring.scale.setScalar(1 + Math.sin(o.t * 5) * 0.08); } }
     else if (o.type === 'dog') { g.rotation.y = o.st === 1 ? Math.atan2(-(P.x - o.x), 30) : (o.side < 0 ? -Math.PI / 2 : Math.PI / 2); y = o.st === 1 ? Math.abs(Math.sin(o.t * 20)) * 0.12 : 0; }
     else if (o.type === 'skater') g.rotation.y = Math.PI + Math.cos(o.t * 3) * 0.2;
     g.position.set(X(o.x), y, Z(o.y));
@@ -311,6 +325,7 @@ function syncPlayer(t, dt) {
 }
 var BULB_ON = new THREE.Color('#fffbe0'), BULB_OFF = new THREE.Color('#ff8a1e');
 var pickupRingMat = new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.7, depthWrite: false });
+var lifeRingMat = new THREE.MeshBasicMaterial({ color: '#ff6b7d', transparent: true, opacity: 0.8, depthWrite: false });
 var AIM = { hand: ['#ffd23f', 0.95, 1.25], door: ['#7dff8a', 0.9, 1.1], window: ['#ff5964', 0.75, 1], wall: ['#ffffff', 0.32, 0.9] };
 
 function syncThrown(t) {

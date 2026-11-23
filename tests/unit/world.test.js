@@ -2,12 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { buildShift, lotAt } from '../../src/world.js';
 import { G } from '../../src/state.js';
 import { LOT, LOT0, HY0, HY1 } from '../../src/config.js';
+import { tune } from '../../src/tuning.js';
 
 describe('building a shift', () => {
   for (const day of [1, 3, 7, 14]) {
     it(`day ${day}: has enough orders and a finish line past the last house`, () => {
       const orders = buildShift(day);
-      const pairs = Math.min(30 + 3 * day, 48);
+      const pairs = tune(day).lots;
       expect(G.lots.length).toBe(pairs * 2);
       expect(orders).toBeGreaterThanOrEqual(12);
       expect(orders).toBe(G.lots.filter(l => l.cust).length);
@@ -43,8 +44,7 @@ describe('building a shift', () => {
   });
 
   it('later days have dogs and driveway cars; day 1 has neither', () => {
-    buildShift(1);
-    expect(G.obs.some(o => o.type === 'dog' || o.type === 'dcar')).toBe(false);
+    for (let i = 0; i < 10; i++) { buildShift(1); expect(G.obs.some(o => ['dog', 'dcar', 'ball', 'barrier'].includes(o.type))).toBe(false); }
     let dogs = 0, cars = 0;
     for (let i = 0; i < 20; i++) { buildShift(7); dogs += G.obs.filter(o => o.type === 'dog').length; cars += G.obs.filter(o => o.type === 'dcar').length; }
     expect(dogs).toBeGreaterThan(0);

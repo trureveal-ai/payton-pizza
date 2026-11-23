@@ -1,0 +1,247 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { H, MAX_LIVES, START_LIVES, STEP, VEH } from '../../src/config.js';
+import { G, P } from '../../src/state.js';
+import { save } from '../../src/save.js';
+import { tune } from '../../src/tuning.js';
+import { mk } from '../../src/world.js';
+import { aimAt, continueRun, endShift, nextShift, startRun, throwPizza, update } from '../../src/game.js';
+
+function start(day, ride, seed) {
+  Object.assign(save, { bank: 0, owned: [true, true, true, true], ride: ride || 0, hi: 0, bestDay: 0, cont: 1, mute: true });
+  G.opt = { seed: seed == null ? 1001 : seed, ride: ride || 0 }; G.keys = {};
+  startRun(day);
+}
+const py = () => G.cam + H - P.sy;
+const steps = (n) => { for (let i = 0; i < n && G.state === 'play'; i++) update(STEP); };
+// put one thing right in front of the ride, with the street otherwise empty
+function meet(type, more) {
+  G.obs = [];
+  const o = Object.assign(mk(type, P.x, py() + 40), more || {});
+  G.obs.push(o); steps(40);
+  return o;
+}
+
+describe('the difficulty curve', () => {
+  it('never gets easier from one day to the next, and levels off', () => {
+    for (let d = 1; d < 30; d++) {
+      const a = tune(d), b = tune(d + 1);
+      for (const k of ['speed', 'lots', 'order', 'side', 'road', 'dog', 'dcar', 'ball', 'barrier']) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
+      expect(b.carDown).toBeLessThanOrEqual(a.carDown);
+    }
+    expect(tune(60).speed).toBe(tune(200).speed);
+  });
+  it('Monday is gentle: no dogs, backing cars, balls, barriers or skaters, and pizza is easy to find', () => {
+    const t = tune(1);
+    expect([t.dog, t.dcar, t.ball, t.barrier]).toEqual([0, 0, 0, 0]);
+    expect(t.skater).toBeNull();
+    expect(t.pickupEvery).toBe(2);
+  });
+  it('Saturday is slower and thinner than it was in v0.2.0', () => {
+    const t = tune(6);
+    expect(t.speed).toBeLessThan(250);          // was 250
+    expect(t.road).toBeLessThan(0.31);          // was 0.31
+    expect(t.dog).toBeLessThan(0.24);           // was 0.24
+    expect(t.carDown).toBeGreaterThan(2.4);     // was 2.4
+  });
+});
+
+describe('lives', () => {
+  beforeEach(() => start(1, 0));
+  it('a run starts with three and a crash costs one', () => {
+    expect(G.lives).toBe(START_LIVES);
+    meet('carD');
+    expect(G.lives).toBe(START_LIVES - 1);
+    expect(G.state).toBe('play');
+  });
+  it('an extra-life pickup adds a life, up to five, then pays points instead', () => {
+    meet('life'); expect(G.lives).toBe(4);
+    meet('life'); expect(G.lives).toBe(MAX_LIVES);
+    const before = G.score; meet('life');
+    expect(G.lives).toBe(MAX_LIVES); expect(G.score).toBe(before + 250);
+  });
+  it('every street has one or two extra lives on it, in the same place each time', () => {
+    for (const day of [1, 4, 9]) {
+      start(day, 0, 4242); const a = G.obs.filter(o => o.type === 'life').map(o => [o.x, o.y]);
+      start(day, 0, 4242); const b = G.obs.filter(o => o.type === 'life').map(o => [o.x, o.y]);
+      expect(a.length).toBeGreaterThanOrEqual(1); expect(a.length).toBeLessThanOrEqual(2);
+      expect(a).toEqual(b);
+    }
+  });
+  it('lives carry into the next shift, and finishing a shift gives one back up to three', () => {
+    meet('carD'); meet('life'); meet('life'); meet('life');            // 2, then 5
+    G.inv = 0; G.stats.delivered = G.stats.orders; endShift(); nextShift();
+    expect(G.day).toBe(2); expect(G.lives).toBe(5);
+    G.inv = 0; meet('carD'); G.inv = 0; meet('carD'); G.inv = 0; meet('carD'); G.inv = 0; meet('carD');   // down to 1
+    expect(G.lives).toBe(1);
+    G.stats.delivered = G.stats.orders; endShift();
+    expect(G.lives).toBe(2);
+  });
+});
+
+describe('Continue', () => {
+  it('picks up from the day the run reached, with the score back at zero and three lives', () => {
+    start(1, 0);
+    G.stats.delivered = G.stats.orders; endShift(); nextShift();
+    G.stats.delivered = G.stats.orders; endShift(); nextShift();
+    expect(G.day).toBe(3); expect(save.cont).toBe(3);
+    G.score = 4321; G.lives = 1; save.bank = 77;
+    meet('carD'); expect(G.state).toBe('over');
+    continueRun();
+    expect(G.state).toBe('play'); expect(G.day).toBe(3);
+    expect(G.score).toBe(0); expect(G.lives).toBe(START_LIVES); expect(G.continued).toBe(true);
+    expect(save.bank).toBe(77);
+  });
+  it('a new run starts on Monday', () => {
+    start(1, 0); save.cont = 5; startRun();
+    expect(G.day).toBe(1); expect(G.continued).toBe(false);
+  });
+  it('continuing a day plays the same street as arriving there', () => {
+    start(4, 0); const a = JSON.stringify(G.lots.map(l => [l.cust, l.slot]));
+    start(1, 0); G.day = 3; G.stats.delivered = G.stats.orders; G.opt = { ride: 0 }; G.runSeed = null; endShift(); nextShift();
+    expect(G.day).toBe(4);
+    G.opt = { ride: 0 }; startRun(4); const b = JSON.stringify(G.lots.map(l => [l.cust, l.slot]));
+    start(4, 0); G.opt = { ride: 0 }; startRun(4);
+    expect(JSON.stringify(G.lots.map(l => [l.cust, l.slot]))).toBe(b);
+    expect(a.length).toBeGreaterThan(10);
+  });
+});
+
+describe('ride perks: each ride shrugs off what the ones before it do, and more', () => {
+  const hurts = (ride, type, more) => { start(5, ride); G.shieldLeft = 0; meet(type, more); return G.lives < START_LIVES; };
+  it('each ride keeps the perks of the one before', () => {
+    for (let i = 1; i < VEH.length; i++) for (const p of VEH[i - 1].perk) expect(VEH[i].perk).toContain(p);
+    expect(VEH[0].perk).toEqual([]);
+  });
+  it('hoverboard: everything hurts', () => {
+    for (const t of ['pothole', 'cone', 'can', 'dog', 'skater', 'carD', 'barrier', 'hydrant']) expect(hurts(0, t, t === 'skater' ? { bx: P.x } : {})).toBe(true);
+  });
+  it('dirt bike: rides over potholes, nothing else', () => {
+    expect(hurts(1, 'pothole')).toBe(false);
+    expect(hurts(1, 'cone')).toBe(true);
+  });
+  it('Bimmer: also knocks cones and bins aside, but dogs and skaters still hurt', () => {
+    expect(hurts(2, 'pothole')).toBe(false);
+    expect(hurts(2, 'cone')).toBe(false);
+    expect(hurts(2, 'can')).toBe(false);
+    expect(hurts(2, 'dog')).toBe(true);
+  });
+  it('van: also shrugs off dogs and skaters', () => {
+    expect(hurts(3, 'dog')).toBe(false);
+    expect(hurts(3, 'skater', { bx: 280 })).toBe(false);
+  });
+  it('traffic, barriers and hydrants hurt every ride', () => {
+    for (let ride = 0; ride < 4; ride++) for (const t of ['carD', 'carU', 'dcar', 'barrier', 'hydrant']) expect(hurts(ride, t)).toBe(true);
+  });
+  it('a knocked-aside hazard flies off and scores a few points', () => {
+    start(5, 2); G.shieldLeft = 0; const before = G.score;
+    const o = meet('cone');
+    expect(o.out).toBe(true); expect(G.stats.bonks).toBe(1); expect(G.score).toBe(before + 10);
+    steps(200); expect(G.obs).not.toContain(o);
+  });
+});
+
+describe('new hazards', () => {
+  it('a puddle costs no life but makes the ride slide', () => {
+    start(2, 0); meet('puddle');
+    expect(G.lives).toBe(START_LIVES);
+    expect(G.stats.crashes).toBe(0);
+    start(2, 0); G.obs = []; G.obs.push(mk('puddle', P.x, py() + 12)); steps(6);
+    expect(G.slip).toBeGreaterThan(0);
+  });
+  it('a ball waits on the lawn, then rolls across the street when you get close', () => {
+    start(3, 0); G.obs = [];
+    const b = Object.assign(mk('ball', 120, py() + 900), { side: -1 }); G.obs.push(b);
+    steps(30); expect(b.x).toBe(120);
+    steps(400);
+    expect(b.x > 120 || !G.obs.includes(b)).toBe(true);
+  });
+});
+
+describe('new customers', () => {
+  function only(type) {   // a street with one customer of this type, a little way ahead on the right
+    start(3, 0); G.obs = [];
+    for (const l of G.lots) { l.cust = false; l.c = null; }
+    const l = G.lots.find(x => x.side > 0 && x.y0 > py() + 500);
+    l.cust = true;
+    l.c = { type, x: 384 - 11, y: l.doorY, by: l.doorY, hx: 373, cx: 359, ph: 0, happy: 0, wait: -1, gone: false, skin: '#fff', shirt: '#fff', hair: '#000' };
+    G.stats.orders = 1; return l;
+  }
+  it('one walks out to the curb as you approach', () => {
+    const l = only('curb');
+    expect(l.c.x).toBe(373);
+    steps(240);
+    expect(l.c.x).toBeLessThan(365);
+  });
+  it('one gives up and goes inside if you are slow; the front door still counts, a hand-off does not', () => {
+    const l = only('quit');
+    P.ty = 650; let guard = 0;
+    while (!l.c.gone && guard++ < 2000) update(STEP);
+    expect(l.c.gone).toBe(true); expect(l.delivered).toBe(false); expect(l.missed).toBe(false);
+    guard = 0; let hit = '';
+    while (G.state === 'play' && !l.delivered && !l.missed && guard++ < 2000) {
+      const a = aimAt(1); if (a.hit === 'hand' || a.hit === 'door') { hit = a.hit; throwPizza(1); }
+      update(STEP);
+    }
+    expect(hit).toBe('door'); expect(l.delivered).toBe(true); expect(G.stats.door).toBe(1); expect(G.stats.hand).toBe(0);
+  });
+  it('catching the impatient one in time pays half as much again', () => {
+    const tipFor = (type) => {
+      const l = only(type); l.c.wait = 99; P.x = P.tx = 330; steps(4);   // patient for the test, and ride close
+      let guard = 0;
+      while (G.state === 'play' && !l.delivered && !l.missed && guard++ < 3000) { G.heat = 100; G.streak = 0; if (aimAt(1).hit === 'hand') throwPizza(1); update(STEP); }
+      expect(l.delivered).toBe(true); expect(G.stats.hand).toBe(1);
+      return G.score;
+    };
+    expect(tipFor('quit')).toBe(tipFor('porch') * 1.5);
+  });
+});
+
+describe('throwing', () => {
+  it('once a pizza is on its way to a house, the aiming ring goes out for that house', () => {
+    start(1, 0, 1001); let guard = 0;
+    while (G.state === 'play' && guard++ < 6000) {
+      const a = aimAt(1);
+      if (a.hit === 'door' || a.hit === 'hand') { throwPizza(1); expect(aimAt(1).lot).not.toBe(a.lot); return; }
+      update(STEP);
+    }
+    throw new Error('never found a house to aim at');
+  });
+  it('a pizza pickup fills the bag', () => {
+    start(1, 0); G.pizzas = 1; meet('pickup');
+    expect(G.pizzas).toBe(VEH[0].cap);
+  });
+});
+
+describe('the bonus round', () => {
+  it('comes after Sunday, every house ordered, nothing is in the way, and pizza never runs out', () => {
+    start(7, 0);
+    G.stats.delivered = G.stats.orders; endShift();
+    expect(G.state).toBe('report');
+    nextShift();
+    expect(G.bonus).toBe(true); expect(G.day).toBe(7); expect(G.state).toBe('play');
+    expect(G.lots.every(l => l.cust)).toBe(true);
+    expect(G.lots.every(l => ['porch', 'yard', 'curb'].includes(l.c.type))).toBe(true);
+    expect(G.obs.length).toBe(0);
+    const had = G.pizzas; throwPizza(1); expect(G.pizzas).toBe(had);
+    steps(600);
+    expect(G.obs.length).toBe(0);                  // no traffic turns up either
+    expect(G.lives).toBe(START_LIVES);
+  });
+  it('missing houses there cannot get you fired, and Monday of the next week follows', () => {
+    start(7, 0); G.stats.delivered = G.stats.orders; endShift(); nextShift();
+    let guard = 0; while (G.state === 'play' && guard++ < 20000) update(STEP);
+    expect(G.state).toBe('report'); expect(G.report.bonus).toBe(true); expect(G.stats.delivered).toBe(0);
+    nextShift();
+    expect(G.bonus).toBe(false); expect(G.day).toBe(8);
+  });
+  it('deliveries there pay double', () => {
+    const scoreFor = (bonus) => {
+      start(7, 0); if (bonus) { G.stats.delivered = G.stats.orders; endShift(); nextShift(); G.score = 0; }
+      let guard = 0;
+      while (G.state === 'play' && G.stats.door === 0 && guard++ < 20000) { G.heat = 100; G.streak = 0; G.obs = []; G.pizzas = 5; const s = guard % 2 ? 1 : -1; if (G.stats.hand === 0 && aimAt(s).hit === 'door') throwPizza(s); update(STEP); if (G.stats.hand) return null; }
+      return G.score;
+    };
+    const a = scoreFor(false), b = scoreFor(true);
+    if (a != null && b != null) expect(b).toBe(a * 2);
+  });
+});
