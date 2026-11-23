@@ -164,8 +164,9 @@ function buildFinish() {
   finish = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: M.checkerTexture() })); scene.add(finish);
   shop = new THREE.Group();
   var b = mesh(cached('shop', M.shopGeo)); b.receiveShadow = true; shop.add(b);
-  var sg = new THREE.PlaneGeometry(6.4, 3.2); sg.rotateX(-Math.PI / 2);
-  var sign = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ map: M.shopSignTexture() })); sign.position.set(0, 4.56, 0); sign.rotation.y = -Math.PI / 2; shop.add(sign);
+  // the sign lies on the roof with its top edge up the street, so it reads the right way up from the camera
+  var sg = new THREE.PlaneGeometry(5.2, 2.6); sg.rotateX(-Math.PI / 2);
+  var sign = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ map: M.shopSignTexture() })); sign.position.set(0, 4.56, 0); shop.add(sign);
   scene.add(shop);
 }
 

@@ -8,7 +8,7 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 | --- | --- | --- | --- | --- | --- |
 | — | 0 | Groundwork and spikes | Spikes pass, or the plan changes with Cam's OK | Nothing | Done 2026-11-22 |
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | CI passes, release published, beta plays like the prototype on phone and PC | Beta | Released 2026-11-22; Cam played it on his phone 2026-11-23 |
-| v0.2.0 | 2 | 3D core and controls: seeded streets, a 3D street in simple shapes, one fixed camera, wider street and view, forgiving tap-to-throw, front-door deliveries made reachable, the Bimmer | Replays are deterministic; smooth on Cam's phone; Cam approves the camera, the street width and the controls | Beta | Built and on beta 2026-11-23, awaiting Cam's review |
+| v0.2.0 | 2 | 3D core and controls: seeded streets, a 3D street in simple shapes, one fixed camera, wider street and view, forgiving tap-to-throw, front-door deliveries made reachable, the Bimmer | Replays are deterministic; smooth on Cam's phone; Cam approves the camera, the street width and the controls | Beta | Released 2026-11-23 after Cam's review on his iPhone |
 | v0.3.0 | 3 | Deeper gameplay: lives made clearer with Continue and extra-life pickups, ride perks, new customers, bonus round, more hazards, tuning | Cam approves the difficulty after a full week of shifts | Beta | Planned |
 | v0.4.0 | 4 | 3D world and rides: finished look for the street, houses, props, traffic and all four rides; day and dusk | Smooth on Cam's phone on the busiest street; Cam approves the look | Beta | Planned |
 | v0.5.0 | 5 | Characters and polish: Payton, customers, effects, menus, tutorial, settings | Cam approves the characters and the menus | Beta | Planned |
@@ -49,7 +49,6 @@ The 2D game is kept in case it is wanted later:
 
 ## Notes carried between phases
 
-- **For Phase 2:** the game uses `Math.random` and real frame times. Seeded streets need a seeded random source and a fixed time step. The five test streets are specified in the build-plan summary. The rules in `src/game.js` and `src/world.js` carry over; `src/render.js` is replaced by a 3D drawing layer and the street sizes in `src/config.js` are reworked.
+- **From Phase 2:** the street kept the 2D game's sizes (8 m road), which is a third wider than the 3D test page, and Cam approved the width. On his iPhone the game averaged 60 frames a second with one-second lows of 46 to 49. Aiming rings promise slightly less than the rules allow, so a lit ring always delivers. The recorded test streets must be re-recorded (`npm run record`) whenever a rule changes on purpose, which Phase 3 will do.
 - **From the 3D test (branch `spike-3d`, page at `/payton-pizza/spike-3d/`):** one merged mesh per house and instanced props kept the scene under 100 draws. Rounded corners are costly, so keep corner detail low on small parts. Looking straight down hides front doors and the van's badge. On the test page, hand-offs were easy to land but front-door deliveries were not, and the view was too narrow to watch a pizza land.
-- **For Phase 2 (touch):** in `src/input.js` a touch counts as a tap only if it moves less than 10 game units within 350 ms, and steering starts after 8 units. That is about 8 px on a phone, less than a normal thumb tap rolls.
 - **For Phase 6:** on iPhone, audio resumes a moment after the first tap. Wait for the resume before scheduling the first sound.

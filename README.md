@@ -2,7 +2,7 @@
 
 An arcade pizza-delivery game for phones and keyboards. Payton rides down the street throwing pizzas: a pizza on the front door scores, and a pizza straight into the customer's hands scores more. Tips buy faster rides, from a hoverboard up to the Payton Pizza van.
 
-**Current version:** 0.1.0 · **Status:** in development. The beta link runs the 3D build that will become v0.2.0 · [Roadmap](ROADMAP.md)
+**Current version:** 0.2.0 · **Status:** in development, playable on the beta link · [Roadmap](ROADMAP.md)
 
 - **Beta (test copy):** https://trureveal-ai.github.io/payton-pizza/beta/
 - **Live:** https://trureveal-ai.github.io/payton-pizza/ (shows "coming soon" until v1.0.0)
@@ -24,17 +24,18 @@ An arcade pizza-delivery game for phones and keyboards. Payton rides down the st
 
 ## Features
 
-In v0.1.0:
+In v0.2.0:
 
-- A scrolling street with houses on both sides. Colored houses ordered; gray houses did not.
+- A 3D street with houses on both sides and one fixed camera. Bright houses ordered; gray houses did not.
 - Front-door deliveries, hand-off bonuses with combos, and a heat bar that raises tips.
-- Four rides and a garage: hoverboard, dirt bike, black car, Payton Pizza van.
+- Aiming rings that show where a pizza thrown now would land.
+- Four rides and a garage: hoverboard, dirt bike, Gun-Metal Black Bimmer, Payton Pizza van.
 - Hazards: traffic, trash cans, hydrants, cones, potholes, dogs, skaters, cars backing out of driveways.
-- Shifts by weekday that get harder, with a shift ticket at the end of each.
+- Shifts by weekday that get harder, with a shift ticket at the end of each. Every player gets the same street on a given day.
 - Touch controls and keyboard controls.
 - Bank, rides and high score saved on the device.
 
-Planned before v1.0.0: a move to 3D with a bright, chunky look, seeded streets, a Continue option and extra lives, ride perks, new customers and a bonus round, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
+Planned before v1.0.0: a Continue option and extra lives, ride perks, new customers and a bonus round, a finished look for the street, rides and people, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
 
 ## How it works
 
@@ -117,7 +118,7 @@ Versions follow [Semantic Versioning](https://semver.org). Each phase of the bui
 | Version | Phase | Adds | Runs on | Status |
 | --- | --- | --- | --- | --- |
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | Beta | Released |
-| v0.2.0 | 2 | 3D core and controls | Beta | Planned |
+| v0.2.0 | 2 | 3D core and controls | Beta | Released |
 | v0.3.0 | 3 | Deeper gameplay | Beta | Planned |
 | v0.4.0 | 4 | 3D world and rides | Beta | Planned |
 | v0.5.0 | 5 | Characters and polish | Beta | Planned |
@@ -135,6 +136,7 @@ Releases are automatic: when `VERSION` changes on `main`, the release workflow r
 
 See [CHANGELOG.md](CHANGELOG.md).
 
+- **0.2.0:** the game moved to a 3D street with one fixed camera, seeded streets, forgiving tap-to-throw, aiming rings and the Gun-Metal Black Bimmer.
 - **0.1.0:** the prototype moved into this repo, split into modules, with tests, CI, automatic releases and a beta deploy.
 
 ## Development

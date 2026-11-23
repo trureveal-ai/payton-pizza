@@ -5,7 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Built for v0.2.0 (Phase 2, 3D core and controls). On beta for review; not released yet.
+Planned for v0.3.0 (Phase 3, deeper gameplay): clearer lives, Continue from the day you reached, extra-life pickups, ride perks, new customer types, a bonus round, more hazards and a tuning pass.
+
+## [0.2.0] - 2026-11-23 — 3D core and controls
+
+The game moves from a 2D canvas to a 3D street with one fixed camera, and throwing gets easier to control.
 
 ### Added
 - The street is drawn in 3D with Three.js: houses, customers, order badges, traffic, hazards, the four rides, pizzas in flight and the finish. Every shape is built in code.
@@ -23,9 +27,11 @@ Built for v0.2.0 (Phase 2, 3D core and controls). On beta for review; not releas
 - The black car is now the Gun-Metal Black Bimmer, repainted gun-metal black with no badge or logo.
 - Front doors and hand-offs are bigger targets: a pizza may land 21 units from the middle of a door (was 16) and 16 from a customer (was 13).
 - Traffic appears further up the street, beyond the 3D view, so cars no longer pop in.
-- The roadmap is now eleven phases (0 to 10): the game goes 3D, and the gameplay work is split across Phases 2 and 3. Lives, Continue, extra-life pickups, ride perks, new customers and the bonus round are planned for v0.3.0. The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
+- The roadmap is now eleven phases (0 to 10): the game goes 3D, and the gameplay work is split across Phases 2 and 3. The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
+- The 3D test page at `/spike-3d/` is retired. Its sources stay on the `spike-3d` branch.
 
 ### Fixed
+- The sign on the shop's roof read sideways.
 - A tap that rolled a few pixels was treated as a drag: the ride twitched and no pizza was thrown. A touch now has to move more than 16 pixels before it steers, and a short touch that stays inside that always throws.
 
 ### Not changed, on purpose
