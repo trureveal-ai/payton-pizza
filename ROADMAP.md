@@ -8,7 +8,7 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 | --- | --- | --- | --- | --- | --- |
 | — | 0 | Groundwork and spikes | Spikes pass, or the plan changes with Cam's OK | Nothing | Done 2026-11-22 |
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | CI passes, release published, beta plays like the prototype on phone and PC | Beta | Released 2026-11-22; Cam played it on his phone 2026-11-23 |
-| v0.2.0 | 2 | 3D core and controls: seeded streets, a 3D street in simple shapes, one fixed camera, wider street and view, forgiving tap-to-throw, front-door deliveries made reachable, the Bimmer | Replays are deterministic; smooth on Cam's phone; Cam approves the camera, the street width and the controls | Beta | Planned |
+| v0.2.0 | 2 | 3D core and controls: seeded streets, a 3D street in simple shapes, one fixed camera, wider street and view, forgiving tap-to-throw, front-door deliveries made reachable, the Bimmer | Replays are deterministic; smooth on Cam's phone; Cam approves the camera, the street width and the controls | Beta | Built and on beta 2026-11-23, awaiting Cam's review |
 | v0.3.0 | 3 | Deeper gameplay: lives made clearer with Continue and extra-life pickups, ride perks, new customers, bonus round, more hazards, tuning | Cam approves the difficulty after a full week of shifts | Beta | Planned |
 | v0.4.0 | 4 | 3D world and rides: finished look for the street, houses, props, traffic and all four rides; day and dusk | Smooth on Cam's phone on the busiest street; Cam approves the look | Beta | Planned |
 | v0.5.0 | 5 | Characters and polish: Payton, customers, effects, menus, tutorial, settings | Cam approves the characters and the menus | Beta | Planned |

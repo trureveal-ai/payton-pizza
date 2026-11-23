@@ -147,13 +147,16 @@ function buildPlayer() {
   sign.add(sl, bulbs, halo); r3.add(sign);
   r3.userData = { arm: arm(1.5, -0.95), sign: sign, signMat: signMat, bulbs: bulbs, halo: halo };
   r3.add(r3.userData.arm);
-  r0.scale.setScalar(1.2); r1.scale.setScalar(1.2); r2.scale.setScalar(1.12); r3.scale.setScalar(0.9);
+  r0.scale.setScalar(1.35); r1.scale.setScalar(1.3); r2.scale.setScalar(1.12); r3.scale.setScalar(0.9);
   rides = [r0, r1, r2, r3];
   for (i = 0; i < 4; i++) { rides[i].visible = false; player.add(rides[i]); }
   // the bumper that saves you from one crash
   var ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1.0, 40), new THREE.MeshBasicMaterial({ color: '#5ad1ff', transparent: true, opacity: 0.65, depthWrite: false, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.2; player.add(ring);
-  player.userData = { rides: rides, ring: ring, px: 0, lean: 0, bulbT: 0, bulbStep: 0 };
+  // a faint ring on the ground so the small rides are easy to find from above
+  var spot = new THREE.Mesh(new THREE.RingGeometry(0.86, 1.0, 36), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.4, depthWrite: false }));
+  spot.rotation.x = -Math.PI / 2; spot.position.y = 0.05; player.add(spot);
+  player.userData = { rides: rides, ring: ring, spot: spot, px: 0, lean: 0, bulbT: 0, bulbStep: 0 };
 }
 
 function buildFinish() {
@@ -300,6 +303,8 @@ function syncPlayer(t, dt) {
       d.bulbs.instanceColor.needsUpdate = true;
     }
   }
+  u.spot.visible = G.shieldLeft <= 0 && G.ride < 2;
+  if (u.spot.visible) u.spot.scale.setScalar(1.25);
   u.ring.visible = G.shieldLeft > 0;
   if (u.ring.visible) u.ring.scale.set(G.V.w / UNIT * 0.5 + 0.55, G.V.h / UNIT * 0.5 + 0.55, 1);
 }

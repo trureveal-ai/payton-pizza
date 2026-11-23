@@ -62,12 +62,12 @@ export function drawVeh(i,x,y,arm,side,t){
     if(arm>0){R(side>0?x+12:x-20,y-3,8,4,'#f2c9a0');}
   }else{
     RR(x-13,y-26,30,58,6,'rgba(0,0,0,0.3)');
-    RR(x-15,y-29,30,58,6,'#f4f1e8');
-    R(x-15,y-6,30,6,'#d7263d');R(x-15,y+20,30,3,'#d7263d');
+    RR(x-15,y-29,30,58,6,'#e3202e');
+    R(x-15,y-6,30,5,'#fff1d0');R(x-15,y+20,30,3,'#fff1d0');
     R(x-12,y-24,24,9,'#3b6a8c');
     R(x-13,y-29,6,3,'#fff6c2');R(x+7,y-29,6,3,'#fff6c2');
     R(x-13,y+26,6,3,'#ff2e43');R(x+7,y+26,6,3,'#ff2e43');
-    R(x-17,y-22,3,4,'#f4f1e8');R(x+14,y-22,3,4,'#f4f1e8');
+    R(x-17,y-22,3,4,'#2c3040');R(x+14,y-22,3,4,'#2c3040');
     // giant light-up slice sign on the roof
     var g=0.45+0.4*Math.sin(t*6);
     ctx.save();ctx.shadowColor='rgba(255,210,63,'+g.toFixed(2)+')';ctx.shadowBlur=16*G.SC;
