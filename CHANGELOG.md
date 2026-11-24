@@ -5,7 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Phase 4 (suburb, rides and the beach town). Everything planned for the phase is now on the beta address for Cam's review; it becomes v0.4.0 when he approves the look and his phone holds a smooth frame rate in both neighborhoods. Downtown and the snowy town follow in v0.5.0, and new rides in v0.6.0.
+Planned for v0.5.0 (Phase 5, downtown and the snowy town): the last two neighborhoods of the four-week cycle, each with its own look and obstacles, and a difficulty check across all four weeks. New rides follow in v0.6.0.
+
+## [0.4.0] - 2026-11-24 — Suburb, rides and the beach town
+
+The street now changes by week. Maple Street got its finished look, the beach town arrived with obstacles of its own, the four rides were finished, and Friday to Sunday are played in the evening. Cam played each part on the beta address and approved the camera, the look, the speed and the beach obstacles.
 
 ### Added
 - **Neighborhoods.** The street changes each week. Week 1 is Maple Street, the suburb; week 2 is the beach town; then the cycle repeats while the difficulty keeps climbing. The banner at the start of a shift names the week and the neighborhood. (`src/hoods.js`; downtown and the snowy town will make it a four-week cycle.)
