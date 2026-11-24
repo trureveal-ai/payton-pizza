@@ -53,6 +53,7 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 ## Decisions (2026-11-23, evening: neighborhoods and rides)
 
 - **Neighborhoods ("worlds"):** four, one per week, then the cycle repeats while the difficulty keeps climbing: suburb, beach town, downtown, snowy mountain town. Each has its own look and its own obstacles. The suburb and the beach town are Phase 4; downtown and the snowy town are Phase 5 (issues #65, #67, #68, #69, #70).
+- **How the game gets harder (2026-11-24):** obstacles do the stepping up, not speed, as in Paperboy. One speed per town (170, 195, 220, 240, then 250); the everyday street steps up once a week; within a week only that town's own obstacles ramp up. If that still does not feel right, the fallback is one flat speed for every street.
 - **More rides in the garage:** after the neighborhoods, in Phase 6. Cam asked for suggestions; which rides and how many is his choice at the start of that phase (issues #64, #71).
 - **Phases:** these two additions make thirteen phases (0 to 12). Characters and polish, music, personal bests and the boards each move two phases later; v1.0.0 is Phase 12.
 

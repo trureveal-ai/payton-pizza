@@ -35,7 +35,7 @@ function begin(bonus){
   G.cam=0;P.x=P.tx=280;P.sy=P.ty=590;G.heat=100;G.streak=0;G.pizzas=G.V.cap;G.shieldLeft=bonus?0:G.V.shield;
   G.inv=0;G.stun=0;G.slip=0;G.sand=0;G.shake=0;G.throwCd=0;G.throwAnim=0;G.lifeFlash=0;
   G.carT=rnd(1.5,3);G.slowT=rnd(3,5);G.skateT=rnd(4,8);G.cartT=G.T.cart?rnd(4,8):0;G.busT=G.T.bus?rnd(3,7):0;G.plowT=G.T.plow?rnd(3,7):0;G.ice=0;G.bannerT=2.4;if(G.day===1&&!bonus)G.hintT=9;
-  G.stats={orders:orders,delivered:0,hand:0,door:0,smash:0,missed:0,tips:0,crashes:0,bonks:0,fed:0};G.dogTip=false;
+  G.stats={orders:orders,delivered:0,hand:0,door:0,smash:0,missed:0,tips:0,crashes:0,bonks:0,fed:0,by:{}};G.dogTip=false;
   if(!bonus&&G.opt.day==null&&save.cont!==G.day){save.cont=G.day;writeSave();}   // where Continue picks up from
   G.state='play';
 }
@@ -131,7 +131,7 @@ export function deliver(l,hand,p){
 export function crash(o){
   var py=G.cam+H-P.sy;
   if(G.shieldLeft>0){G.shieldLeft--;G.inv=1.3;G.shake=0.2;sfx('shield');pop(P.x,py,'BUMPER SAVED YOU!','#5ad1ff',16,40);return;}
-  G.lives--;G.inv=1.9;G.stun=0.6;G.streak=0;G.heat=Math.max(0,G.heat-25);G.shake=0.45;G.stats.crashes++;G.lifeFlash=1;
+  G.lives--;G.inv=1.9;G.stun=0.6;G.streak=0;G.heat=Math.max(0,G.heat-25);G.shake=0.45;G.stats.crashes++;if(o)G.stats.by[o.type]=(G.stats.by[o.type]||0)+1;G.lifeFlash=1;
   sfx('crash');pop(P.x,py,'WIPEOUT!','#ff5964',22,46);
   if(G.lives>0)pop(P.x,py,G.lives+(G.lives===1?' LIFE':' LIVES')+' LEFT','#fff',14,24);
   burst(P.x,py,18,['#fff','#ffd23f','#ff5964','#e8b04a'],240);

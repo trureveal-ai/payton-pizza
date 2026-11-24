@@ -37,7 +37,9 @@ The rules draw every random number from `src/rng.js` and advance in fixed steps 
 
 `tests/tools/sim.js` plays the rules with no screen. `tests/fixtures/streets.json` holds recorded inputs and results for the five test streets (T5 once per ride), each as a normal run and as a full-length run that rides through hazards. `tests/unit/streets.test.js` replays them.
 
-`npm run measure` has the automatic player ride twelve streets for each of nine days and prints how many it finished and delivered. Run it before and after a change to `src/tuning.js` and put both in the changelog. The automatic player steers worse than a person, so read it as a direction, not a score.
+`npm run measure` has the automatic player play a normal run (three lives) on twelve streets for each of thirteen days and prints how many it finished and delivered. `npm run measure:weeks` gives it spare lives, rides whole streets and prints how often it was hit, week by week and ride by ride; that is the yardstick for whether each week steps up from the last (`-- 3 4 12 days` for the van only, four weeks, twelve streets a day, with each day and what did the hitting). Run both before and after a change to `src/tuning.js` and put the result in the changelog. The automatic player steers worse than a person and knows every obstacle's rule by heart, so read them as a direction, not a score; a difference of 0.2 between two weeks is noise.
+
+**How the difficulty is built (decided 2026-11-24):** obstacles do the stepping up, not speed. The street has one speed per town. In week 1 the everyday obstacles arrive day by day; after that the everyday street takes one step up each week and holds it Monday to Sunday. Within a week only the town's own obstacles ramp up. The rules are spelled out at the top of `tune()` in `src/tuning.js` and held by the "difficulty curve" unit tests.
 
 If a rule changes on purpose, the recordings no longer match. Run `npm run record`, check the printed results make sense, commit the new fixture and say so in the changelog.
 

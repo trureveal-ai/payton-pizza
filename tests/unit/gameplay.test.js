@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { DOG_ALERT, DOG_CHASE, DOG_JUMP, H, MAX_LIVES, START_LIVES, STEP, VEH } from '../../src/config.js';
 import { G, P } from '../../src/state.js';
 import { save } from '../../src/save.js';
-import { tune } from '../../src/tuning.js';
+import { TOP_SPEED, TOWN_SPEED, tune } from '../../src/tuning.js';
 import { HOODS, hoodOf, weekOf } from '../../src/hoods.js';
 import { mk } from '../../src/world.js';
 import { aimAt, continueRun, dogOn, endShift, nextShift, startRun, throwPizza, update } from '../../src/game.js';
@@ -23,16 +23,45 @@ function meet(type, more) {
 }
 
 describe('the difficulty curve', () => {
+  const EVERYDAY = ['lots', 'order', 'side', 'road', 'barrier', 'pacer', 'quitter'];
+  const OWN = ['dog', 'dcar', 'ball', 'sand', 'surfer', 'taxi', 'manhole', 'ice', 'kid'];
   it('never gets easier from one day to the next, and levels off', () => {
-    for (let d = 1; d < 30; d++) {
+    for (let d = 1; d < 120; d++) {
       const a = tune(d), b = tune(d + 1);
-      for (const k of ['speed', 'lots', 'order', 'side', 'road', 'barrier']) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
+      for (const k of ['speed', ...EVERYDAY]) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
       expect(b.carDown).toBeLessThanOrEqual(a.carDown);
+      expect(b.patience).toBeLessThanOrEqual(a.patience);
       // a neighborhood's own obstacles never ease off within its week, or the next time it comes round
       const sameWeek = a.hood === b.hood, c = tune(d + 7 * HOODS.length);
-      for (const k of ['dog', 'dcar', 'ball', 'sand', 'surfer', 'taxi', 'manhole', 'ice', 'kid']) { if (sameWeek) expect(b[k]).toBeGreaterThanOrEqual(a[k]); expect(c[k]).toBeGreaterThanOrEqual(a[k]); }
+      for (const k of OWN) { if (sameWeek) expect(b[k]).toBeGreaterThanOrEqual(a[k]); expect(c[k]).toBeGreaterThanOrEqual(a[k]); }
     }
-    expect(tune(60).speed).toBe(tune(200).speed);
+    // the third time round the four towns is as hard as it gets: every later round is the same
+    for (let d = 57; d <= 84; d++) expect(tune(d + 28)).toEqual(tune(d));
+  });
+  it('gives the street one speed per town, which changes only when the town does', () => {
+    for (let wk = 1; wk <= 12; wk++) {
+      const want = wk <= TOWN_SPEED.length ? TOWN_SPEED[wk - 1] : TOP_SPEED;
+      for (let n = 1; n <= 7; n++) expect(tune((wk - 1) * 7 + n).speed).toBe(want);
+    }
+    for (let i = 1; i < TOWN_SPEED.length; i++) expect(TOWN_SPEED[i]).toBeGreaterThan(TOWN_SPEED[i - 1]);
+    expect(TOP_SPEED).toBeGreaterThan(TOWN_SPEED[TOWN_SPEED.length - 1]);
+  });
+  it('after the first week holds the everyday street still from Monday to Sunday, so only the town\'s own obstacles ramp up', () => {
+    for (let wk = 2; wk <= 12; wk++) {
+      const mon = tune((wk - 1) * 7 + 1), sun = tune(wk * 7);
+      for (const k of [...EVERYDAY, 'carDown', 'carUp', 'patience']) expect(sun[k]).toBe(mon[k]);
+      expect(sun.skater).toEqual(mon.skater);
+      expect(OWN.some((k) => sun[k] > mon[k])).toBe(true);
+    }
+  });
+  it('steps the everyday street up once a week until the fifth week', () => {
+    for (const k of ['side', 'road', 'barrier']) {
+      expect(tune(8)[k]).toBeGreaterThan(tune(7)[k]);
+      expect(tune(15)[k]).toBeGreaterThan(tune(8)[k]);
+      expect(tune(22)[k]).toBeGreaterThan(tune(15)[k]);
+      expect(tune(29)[k]).toBeGreaterThanOrEqual(tune(22)[k]);
+      expect(tune(36)[k]).toBe(tune(29)[k]);
+    }
   });
   it('Monday is gentle: no dogs, backing cars, balls, barriers or skaters, and pizza is easy to find', () => {
     const t = tune(1);
@@ -358,7 +387,7 @@ describe('beach town obstacles', () => {
     expect(G.lives).toBe(START_LIVES); expect(G.stats.crashes).toBe(0);
   });
   it('a surfer waits at the curb, then carries the board across when you get close', () => {
-    empty(); P.x = P.tx = 150;
+    empty(); P.x = P.tx = 330;   // on the surfer's own side: by the time the ride gets there the surfer is well across
     const s = Object.assign(mk('surfer', 358, py() + 900), { side: 1 }); G.obs.push(s);
     alone('surfer', () => s.y - py() < 500); expect(s.x).toBe(358);
     alone('surfer', () => s.st === 1); steps(30); expect(s.x).toBeLessThan(358);
