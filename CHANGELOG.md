@@ -19,6 +19,7 @@ Phase 4 (suburb, rides and the beach town). Everything planned for the phase is 
 - 8 more unit tests (93 in all) for neighborhoods and the beach obstacles.
 
 ### Changed
+- **A little slower.** With the lower camera the street felt "a little too fast" to Cam, so it now starts at 150 and gains 7 a day up to 250 (was 160, 9 a day, up to 280). That is 6% slower on the first Monday and about 12% slower by the second week.
 - **The camera sits a little lower** (57 degrees down, was 62), at Cam's ask, so more of the house fronts shows. It still never turns.
 - The aiming ring now works out where a pacing customer will be when the pizza arrives, so it lights for them more often and still never promises a delivery that misses.
 - Each street's houses are built when the street starts and thrown away when the next one does, so memory does not grow as the weeks go by.

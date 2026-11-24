@@ -12,7 +12,9 @@ export function tune(d) {
   var hood = hoodOf(d).key, suburb = hood === 'suburb', beach = hood === 'beach', n = (d - 1) % 7 + 1, wk = weekOf(d);
   return {
     hood: hood,
-    speed: Math.min(160 + 9 * (d - 1), 280),          // how fast the street scrolls (was 185 + 13 a day, up to 320)
+    // How fast the street scrolls. Slowed twice at Cam's ask: v0.2.0 was 185 + 13 a day up to 320, v0.3.0
+    // was 160 + 9 a day up to 280; with the lower camera of v0.4.0 that felt "a little too fast".
+    speed: Math.min(150 + 7 * (d - 1), 250),
     lots: Math.min(26 + 2 * d, 44),                   // pairs of houses (was 30 + 3 a day, up to 48)
     order: ramp(0.34, 0.02, d, 0.5),                  // chance a house ordered
     side: ramp(0.14, 0.025, d, 0.45),                 // a bin or hydrant on each sidewalk, per lot

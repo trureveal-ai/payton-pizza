@@ -61,6 +61,8 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **Beach town:** Cam likes it.
 - **Camera:** a little lower, for a little more detail. Now 57 degrees down (was 62).
 - **Roadwork barriers:** they make it more challenging; they stay for now.
+- **Camera at 57 degrees:** approved ("This is how it's supposed to be"). No stutter on his phone; the evening shifts and the details "look so good".
+- **Speed:** "moving a little too fast", so the street was slowed a little (150 + 7 a day up to 250).
 
 ## The 2D version
 
