@@ -5,7 +5,7 @@ import { G } from '../../src/state.js';
 import { record } from './sim.js';
 
 const RIDE_FOR_DAY = (d) => (d <= 2 ? 0 : d <= 4 ? 1 : d <= 7 ? 2 : 3);   // a typical player's ride by that day
-const days = [1, 2, 3, 4, 5, 6, 7, 10, 14], SEEDS = 12;
+const days = [1, 2, 3, 4, 5, 6, 7, 10, 14, 17, 21, 24, 28], SEEDS = 12;
 console.log('day ride  finished  street%  delivered%  crashes  hand  door  secs');
 for (const day of days) {
   const ride = RIDE_FOR_DAY(day);

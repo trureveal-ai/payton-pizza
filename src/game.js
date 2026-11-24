@@ -34,7 +34,7 @@ function begin(bonus){
   var orders=bonus?buildBonus(G.day):buildShift(G.day);
   G.cam=0;P.x=P.tx=280;P.sy=P.ty=590;G.heat=100;G.streak=0;G.pizzas=G.V.cap;G.shieldLeft=bonus?0:G.V.shield;
   G.inv=0;G.stun=0;G.slip=0;G.sand=0;G.shake=0;G.throwCd=0;G.throwAnim=0;G.lifeFlash=0;
-  G.carT=rnd(1.5,3);G.slowT=rnd(3,5);G.skateT=rnd(4,8);G.cartT=G.T.cart?rnd(4,8):0;G.bannerT=2.4;if(G.day===1&&!bonus)G.hintT=9;
+  G.carT=rnd(1.5,3);G.slowT=rnd(3,5);G.skateT=rnd(4,8);G.cartT=G.T.cart?rnd(4,8):0;G.busT=G.T.bus?rnd(3,7):0;G.plowT=G.T.plow?rnd(3,7):0;G.ice=0;G.bannerT=2.4;if(G.day===1&&!bonus)G.hintT=9;
   G.stats={orders:orders,delivered:0,hand:0,door:0,smash:0,missed:0,tips:0,crashes:0,bonks:0,fed:0};G.dogTip=false;
   if(!bonus&&G.opt.day==null&&save.cont!==G.day){save.cont=G.day;writeSave();}   // where Continue picks up from
   G.state='play';
@@ -154,13 +154,13 @@ export function update(dt){
   if(G.state!=='play')return;
   G.step++;
 
-  if(G.inv>0)G.inv-=dt;if(G.stun>0)G.stun-=dt;if(G.slip>0)G.slip-=dt;if(G.sand>0)G.sand-=dt;if(G.throwCd>0)G.throwCd-=dt;if(G.throwAnim>0)G.throwAnim-=dt;
+  if(G.inv>0)G.inv-=dt;if(G.stun>0)G.stun-=dt;if(G.slip>0)G.slip-=dt;if(G.sand>0)G.sand-=dt;if(G.ice>0)G.ice-=dt;if(G.throwCd>0)G.throwCd-=dt;if(G.throwAnim>0)G.throwAnim-=dt;
   if(G.bannerT>0)G.bannerT-=dt;if(G.hintT>0)G.hintT-=dt;
 
   // steering (a puddle makes the ride slide: it answers the wheel slowly for a moment)
   var kx=((G.keys.ArrowRight||G.keys.KeyL)?1:0)-((G.keys.ArrowLeft||G.keys.KeyJ)?1:0);
   var ky=((G.keys.ArrowDown||G.keys.KeyK)?1:0)-((G.keys.ArrowUp||G.keys.KeyI)?1:0);
-  var st=G.V.steer*(G.stun>0?0.4:G.slip>0?0.4:1);
+  var st=G.V.steer*(G.stun>0?0.4:G.ice>0?0.12:G.slip>0?0.4:1);   // on ice the ride barely answers the wheel
   if(kx||ky){P.x+=kx*st*dt;P.sy+=ky*250*dt;P.tx=P.x;P.ty=P.sy;}
   else{var mx=st*1.6*dt,my=460*dt;P.x+=clamp(P.tx-P.x,-mx,mx);P.sy+=clamp(P.ty-P.sy,-my,my);}
   var xmin=SWL+G.V.w/2+1,xmax=SWR-G.V.w/2-1;
@@ -179,6 +179,9 @@ export function update(dt){
   G.carT-=dt;if(G.carT<=0&&!nearEnd){G.carT=rnd(G.T.carDown,G.T.carDown+2.2);o=mk('carD',200+rnd(-8,8),G.cam+AHEAD);o.vy=-(110+rnd(0,90));G.obs.push(o);}
   G.slowT-=dt;if(G.slowT<=0&&!nearEnd){G.slowT=rnd(G.T.carUp,G.T.carUp+3);o=mk('carU',280+rnd(-8,8),G.cam+AHEAD);o.vy=base*0.42;G.obs.push(o);}
   // a golf cart putters up the street, drifting from one lane to the other and back
+  // downtown: a bus in the right-hand lane that stops and starts. Snowy town: a snowplow coming down the left.
+  if(G.T.bus){G.busT-=dt;if(G.busT<=0&&!nearEnd){G.busT=rnd(G.T.bus[0],G.T.bus[1]);o=mk('bus',280,G.cam+AHEAD);o.ct=rnd(0,3);G.obs.push(o);}}
+  if(G.T.plow){G.plowT-=dt;if(G.plowT<=0&&!nearEnd){G.plowT=rnd(G.T.plow[0],G.T.plow[1]);o=mk('plow',205,G.cam+AHEAD);o.vy=-55;G.obs.push(o);}}
   if(G.T.cart){G.cartT-=dt;if(G.cartT<=0&&!nearEnd){G.cartT=rnd(G.T.cart[0],G.T.cart[1]);o=mk('cart',240,G.cam+AHEAD);o.vy=base*0.5;o.ph=rnd(0,6.28);G.obs.push(o);}}
   if(G.T.skater){G.skateT-=dt;if(G.skateT<=0&&!nearEnd){G.skateT=rnd(G.T.skater[0],G.T.skater[1]);o=mk('skater',chance(0.5)?145:335,G.cam+AHEAD-30);o.bx=o.x;o.vy=-70;G.obs.push(o);}}
 
@@ -220,6 +223,17 @@ export function update(dt){
       if(o.st===2){o.x+=-o.side*88*dt;var stop=o.side<0?205:275;if((o.side<0&&o.x>=stop)||(o.side>0&&o.x<=stop)){o.x=stop;o.st=3;}}
     }else if(o.type==='skater'){o.x=o.bx+Math.sin(o.t*3)*9;}
     else if(o.type==='cart')o.x=240+Math.sin(o.t*0.9+o.ph)*42;
+    else if(o.type==='bus'){o.ct+=dt;o.stopped=o.ct%5.5>=3.5;o.vy=o.stopped?0:base*0.5;}   // drives for 3.5 s, waits at a stop for 2
+    else if(o.type==='taxi'){   // parked at the curb; it beeps, pulls out into the lane as you come up, then drives on slowly
+      if(o.st===0&&o.y-py<460&&sy<H){o.st=1;o.ct=0;sfx('beep');}
+      if(o.st===1){o.ct+=dt;if(o.ct>0.5)o.st=2;}
+      if(o.st===2){o.x+=-o.side*70*dt;o.vy=Math.min(base*0.45,o.vy+140*dt);var lane=o.side<0?205:275;if((o.side<0&&o.x>=lane)||(o.side>0&&o.x<=lane)){o.x=lane;o.st=3;}}
+      if(o.st===3)o.vy=base*0.45;
+    }
+    else if(o.type==='kid'){   // waits at the curb, then throws a snowball across the street
+      if(o.st===0&&o.y-py<o.at&&o.y>py){o.st=1;var sb=mk('snowball',o.x,o.y);sb.vx=-o.side*150;sb.side=o.side;G.obs.push(sb);sfx('throw');}
+    }
+    else if(o.type==='snowball'){o.x+=o.vx*dt;if(o.x<112||o.x>368){G.obs.splice(i,1);continue;}}
     else if(o.type==='surfer'){   // waits at the curb, then carries the board across once you are close
       if(o.st===0&&o.y-py<430&&sy<H)o.st=1;
       if(o.st===1){o.x+=-o.side*70*dt;if(o.x<116||o.x>364){G.obs.splice(i,1);continue;}}
@@ -231,6 +245,7 @@ export function update(dt){
     o.y+=o.vy*dt;
     if(o.y<G.cam-90){G.obs.splice(i,1);continue;}
     if(Math.abs(o.x-P.x)<(o.w+pw)/2&&Math.abs(o.y-py)<(o.h+ph)/2){
+      if(o.type==='kid')continue;   // the kid stays on the sidewalk; it is the snowball that matters
       if(o.type==='dog'&&o.st>=3)continue;   // busy with its pizza, or given up
       if(o.type==='pickup'){var got=G.V.cap-G.pizzas;G.pizzas=G.V.cap;G.obs.splice(i,1);sfx('pickup');pop(P.x,py,got>0?'+'+got+' PIZZAS':'BAG IS FULL','#ffd23f',16,36);continue;}
       if(o.type==='life'){
@@ -239,6 +254,7 @@ export function update(dt){
         else{G.score+=250;pop(P.x,py,'FULL LIVES  +250','#ff6b7d',16,40);}
         continue;
       }
+      if(o.type==='ice'){G.ice=0.25;if(!o.hit){o.hit=true;sfx('splash');pop(P.x,py,'ICE!','#bfe9ff',15,34);}continue;}
       if(o.type==='sand'){G.sand=0.3;if(!o.hit){o.hit=true;sfx('sand');pop(P.x,py,'SAND!','#e8c877',15,34);}continue;}
       if(o.type==='puddle'){if(!o.hit){o.hit=true;G.slip=0.9;G.heat=Math.max(0,G.heat-10);sfx('splash');pop(P.x,py,'SPLASH!','#7fd4ff',15,34);}continue;}
       if(G.V.perk.indexOf(o.type)>=0){   // a pothole is simply ridden over

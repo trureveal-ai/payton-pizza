@@ -5,7 +5,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Planned for v0.5.0 (Phase 5, downtown and the snowy town): the last two neighborhoods of the four-week cycle, each with its own look and obstacles, and a difficulty check across all four weeks. New rides follow in v0.6.0.
+Phase 5 (downtown and the snowy town). On the beta address for Cam's review; it becomes v0.5.0 when he approves the look and the obstacles of both neighborhoods and the frame rate holds on his phone. New rides follow in v0.6.0.
+
+### Added
+- **Downtown (week 3).** Brick blocks of two to four storeys with something different on every roof (water tanks, skylights, roof gardens), pavement in place of lawns, street trees in planters, benches, newspaper boxes, bike racks and cafe tables.
+- **Downtown obstacles.** Taxis wait at the curb, beep and pull out into the lane as you come up. Buses run in the right-hand lane and stop and start. Open manholes wipe out every ride. No dogs, balls or cars backing out downtown.
+- **Frosty Peak, the snowy mountain town (week 4).** Snow on the ground and on every roof, wooden houses, pines with snow on them, snowdrifts, snowmen, sleds and woodpiles.
+- **Snowy town obstacles.** Ice costs no life, but the ride barely steers while it is on it. Kids at the curb throw snowballs across the street: a snowball wipes out the hoverboard and the dirt bike and bounces off the Bimmer and the van. A snowplow comes down the left-hand lane.
+- The cycle is now four weeks: Maple Street, the beach town, downtown, Frosty Peak, then round again while the difficulty keeps climbing.
+- 8 more unit tests (101 in all) for the two neighborhoods and their obstacles.
+
+### Changed
+- Balls now belong to the suburb and the beach town only.
+- `npm run measure` also covers days 17, 21, 24 and 28.
+
+### Measured with the automatic player (12 streets a day, in the van)
+
+| Day | Neighborhood | Streets finished | Crashes a street |
+| --- | --- | --- | --- |
+| 14 | Beach town, Sunday | 7 of 12 | 2.1 |
+| 17 | Downtown, Wednesday | 11 of 12 | 1.5 |
+| 21 | Downtown, Sunday | 9 of 12 | 0.9 |
+| 24 | Frosty Peak, Wednesday | 11 of 12 | 1.4 |
+| 28 | Frosty Peak, Sunday | 12 of 12 | 1.6 |
+
+By this measure the beach town is still the hardest week for the automatic player, which handles the drifting golf carts badly. It steers worse than a person, so whether the weeks climb in the right order is for Cam's playtest to say.
 
 ## [0.4.0] - 2026-11-24 — Suburb, rides and the beach town
 

@@ -22,6 +22,13 @@ export function mk(type,x,y){
   else if(type==='barrier'){o.w=64;o.h=16;}
   else if(type==='sand'){o.w=56;o.h=44;}
   else if(type==='surfer'){o.w=40;o.h=14;o.col=pick(SHIRT);o.board=pick(['#ff5a5f','#ffd23f','#3ec1d3','#ffffff']);}
+  else if(type==='taxi'){o.w=24;o.h=46;}
+  else if(type==='bus'){o.w=30;o.h=92;o.col=pick(['#2e86c1','#27ae60','#c0392b']);}
+  else if(type==='manhole'){o.w=22;o.h=22;}
+  else if(type==='ice'){o.w=60;o.h=50;}
+  else if(type==='kid'){o.w=0;o.h=0;o.col=pick(SHIRT);o.at=rnd(180,330);}   // `at`: how close you get before the snowball flies
+  else if(type==='snowball'){o.w=12;o.h=12;}
+  else if(type==='plow'){o.w=44;o.h=50;}
   else if(type==='cart'){o.w=22;o.h=34;o.col=pick(['#ff7a59','#3ec1d3','#ffd23f','#7bd389']);}
   return o;
 }
@@ -55,6 +62,10 @@ export function buildShift(d){
     if(t.ball&&chance(t.ball)){s=chance(0.5)?-1:1;o=mk('ball',s<0?120:360,y+rnd(40,170));o.side=s;G.obs.push(o);}
     if(t.barrier&&i>2&&chance(t.barrier))G.obs.push(mk('barrier',chance(0.5)?200:280,y+rnd(30,180)));
     if(t.sand&&chance(t.sand))G.obs.push(mk('sand',rnd(190,290),y+rnd(0,LOT)));
+    if(t.manhole&&chance(t.manhole))G.obs.push(mk('manhole',rnd(185,295),y+rnd(0,LOT)));
+    if(t.taxi&&i>1&&chance(t.taxi)){s=chance(0.5)?-1:1;o=mk('taxi',s<0?173:307,y+rnd(30,180));o.side=s;G.obs.push(o);}
+    if(t.ice&&chance(t.ice))G.obs.push(mk('ice',rnd(190,290),y+rnd(0,LOT)));
+    if(t.kid&&i>1&&chance(t.kid)){s=chance(0.5)?-1:1;o=mk('kid',s<0?122:358,y+rnd(40,170));o.side=s;G.obs.push(o);}
     if(t.surfer&&i>1&&chance(t.surfer)){s=chance(0.5)?-1:1;o=mk('surfer',s<0?122:358,y+rnd(40,170));o.side=s;G.obs.push(o);}
     if(i%t.pickupEvery===1)G.obs.push(mk('pickup',rnd(152,328),y+rnd(20,190)));
     y+=LOT;

@@ -31,7 +31,7 @@ In v0.4.0:
 - Aiming rings that show where a pizza thrown now would land.
 - Four rides and a garage: hoverboard, dirt bike, Gun-Metal Black Bimmer, Payton Pizza van. Each ride shrugs off more hazards than the one before.
 - Hazards: traffic, trash cans, hydrants, cones, potholes, puddles, balls, roadwork barriers, dogs, skaters, cars backing out of driveways.
-- Neighborhoods that change by week, each with its own look and obstacles: Maple Street, then the beach town with sand drifts, surfers and golf carts. Friday to Sunday are evening shifts. A low-effects switch in the pause menu helps slower phones.
+- Neighborhoods that change by week, each with its own look and obstacles: Maple Street, then the beach town with sand drifts, surfers and golf carts; and, on the beta address for v0.5.0, downtown with taxis, buses and open manholes, then Frosty Peak with ice, snowballs and a snowplow. Friday to Sunday are evening shifts. A low-effects switch in the pause menu helps slower phones.
 - Customers who wait on the porch, in the yard or at the curb, pace about, or give up and go inside.
 - Three lives that carry between shifts, extra-life pickups, and Continue from the day you reached.
 - Shifts by weekday that get harder, with a shift ticket at the end of each and a bonus round after Sunday. Every player gets the same street on a given day.
