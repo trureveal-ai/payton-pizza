@@ -31,6 +31,7 @@ In v0.3.0:
 - Aiming rings that show where a pizza thrown now would land.
 - Four rides and a garage: hoverboard, dirt bike, Gun-Metal Black Bimmer, Payton Pizza van. Each ride shrugs off more hazards than the one before.
 - Hazards: traffic, trash cans, hydrants, cones, potholes, puddles, balls, roadwork barriers, dogs, skaters, cars backing out of driveways.
+- Neighborhoods that change by week, each with its own look and obstacles (on the beta address, coming in v0.4.0): Maple Street, then the beach town with sand drifts, surfers and golf carts.
 - Customers who wait on the porch, in the yard or at the curb, pace about, or give up and go inside.
 - Three lives that carry between shifts, extra-life pickups, and Continue from the day you reached.
 - Shifts by weekday that get harder, with a shift ticket at the end of each and a bonus round after Sunday. Every player gets the same street on a given day.
@@ -48,7 +49,7 @@ index.html ── src/main.js ── loop: update(1/60 s) as many times as neede
                  │
                  ├─ input.js     touch, mouse, keyboard (touch.js tells a tap from a drag)
                  ├─ game.js      rules: shifts, throwing, delivering, crashing
-                 ├─ world.js     builds each street from a seed (rng.js); tuning.js says how hard each day is
+                 ├─ world.js     builds each street from a seed (rng.js); tuning.js says how hard each day is; hoods.js says which neighborhood a week is in
                  ├─ render3d.js  draws the street in 3D with one fixed camera (models.js holds the shapes)
                  ├─ render.js    draws the HUD, menus and pop-up words on top
                  ├─ audio.js     sound effects made in code

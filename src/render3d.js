@@ -11,13 +11,20 @@ import * as M from './models.js';
 
 var X = function (x) { return (x - W / 2) / UNIT; };
 var Z = function (wy) { return -wy / UNIT; };
-var HAZE = '#cdeaff';
+// How each neighborhood looks. Its obstacles are set in tuning.js; this is only colour and scenery.
+var THEMES = {
+  suburb: { haze: '#cdeaff', grass: '#5fd14e', road: '#565b6e', walk: '#e3ddcb', dash: '#f5d547', under: '#9fd68a', ocean: false,
+    walls: ['#f4ead2', '#e6f0f7', '#fbe3c7', '#e4efd8', '#f7dfe4', '#fff6e6'], dull: ['#cfcabb', '#c9cfd3', '#d3c8be'], porch: '#c58d4e' },
+  beach: { haze: '#bfeeff', grass: '#f1dea6', road: '#6c7181', walk: '#c9a36b', dash: '#ffffff', under: '#ffe9b0', ocean: true,
+    walls: ['#ffd9c2', '#c9f0ea', '#fff3b8', '#d7e3ff', '#ffd1e1', '#ffffff'], dull: ['#e3ddd0', '#d6dde0', '#e0d6cc'], porch: '#c9a36b' }
+};
+var theme = THEMES.suburb, themeKey = '';
 var PITCH = 62 * Math.PI / 180, VFOV = 60, HALF_W = 11.8, BOTTOM = -0.6;
 
-var renderer = null, scene, camera, toon, sun, ground, dashes, world;
+var renderer = null, scene, camera, toon, sun, hemi, ground, dashes, world, grassMat, roadMat, walkMat, ocean;
 var cam = { D: 38, h: 33, g: 18, foot: 1, far: 60, ahead: 55 };
 var lotsRef = null, lotObjs = [], obsMap = new Map(), stamp = 0;
-var geoCache = {}, markerMat = {}, player = null, pies = [], decals, aims = [], finish = null, shop = null;
+var geoCache = {}, houseGeos = [], markerMat = {}, player = null, pies = [], decals, aims = [], finish = null, shop = null;
 var v3 = new THREE.Vector3(), m4 = new THREE.Matrix4();
 
 function cached(key, make) { return geoCache[key] || (geoCache[key] = make()); }
@@ -33,15 +40,15 @@ export function init3d() {
   renderer.shadowMap.enabled = shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(HAZE);
-  scene.fog = new THREE.Fog(HAZE, 40, 60);
+  scene.background = new THREE.Color(theme.haze);
+  scene.fog = new THREE.Fog(theme.haze, 40, 60);
   camera = new THREE.PerspectiveCamera(VFOV, 1, 1, 300);
 
   var grad = new THREE.DataTexture(new Uint8Array([160, 218, 255]), 3, 1, THREE.RedFormat);
   grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
   toon = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: grad });
 
-  scene.add(new THREE.HemisphereLight('#ffffff', '#9fd68a', 1.5));
+  hemi = new THREE.HemisphereLight('#ffffff', theme.under, 1.5); scene.add(hemi);
   // The sun shines from behind the camera with no sideways lean, so shadows fall up the street
   // and can be kept perfectly steady as the camera moves (see placeSun).
   sun = new THREE.DirectionalLight('#fff3d0', 2.9);
@@ -53,17 +60,24 @@ export function init3d() {
 
   // ground: grass, road, sidewalks. It slides along with the camera.
   ground = new THREE.Group(); scene.add(ground);
-  var LEN = 150, flat = function (w, color, x, y) {
+  var LEN = 150, flat = function (w, mat, x, y) {
     var g = new THREE.PlaneGeometry(w, LEN); g.rotateX(-Math.PI / 2);
-    var m = new THREE.Mesh(g, new THREE.MeshToonMaterial({ color: color, gradientMap: grad }));
-    m.position.set(x, y, 0); m.receiveShadow = true; ground.add(m);
+    var m = new THREE.Mesh(g, mat);
+    m.position.set(x, y, 0); m.receiveShadow = true; ground.add(m); return m;
   };
+  var tm = function (color) { return new THREE.MeshToonMaterial({ color: color, gradientMap: grad }); };
+  grassMat = tm(theme.grass); roadMat = tm(theme.road); walkMat = tm(theme.walk);
   var rw = (RDR - RDL) / UNIT, sw = (RDL - SWL) / UNIT, edge = (SWR - SWL) / UNIT / 2;
-  flat(80, '#5fd14e', -(edge + 40), 0); flat(80, '#5fd14e', edge + 40, 0); flat(rw, '#565b6e', 0, 0);
+  flat(80, grassMat, -(edge + 40), 0); flat(80, grassMat, edge + 40, 0); flat(rw, roadMat, 0, 0);
   for (var s = -1; s <= 1; s += 2) {
-    var sm = mesh(M.part(M.box(sw, 0.16, LEN, 0.04), '#e3ddcb'), toon, false);
+    var sm = new THREE.Mesh(M.box(sw, 0.16, LEN, 0.04), walkMat);
     sm.position.set(s * (rw / 2 + sw / 2), 0.08, 0); sm.receiveShadow = true; ground.add(sm);
   }
+  // the sea behind the houses on the left, with a line of foam; only the beach town shows it
+  ocean = new THREE.Group();
+  ocean.add(flat(70, new THREE.MeshBasicMaterial({ color: '#3fb8e6' }), -51.5, 0.03), flat(0.7, new THREE.MeshBasicMaterial({ color: '#ffffff' }), -16.4, 0.04),
+    flat(2.2, new THREE.MeshBasicMaterial({ color: '#8fdcf5' }), -17.8, 0.035));
+  ocean.visible = false; ground.add(ocean);
   var dg = new THREE.PlaneGeometry(0.2, 1.7); dg.rotateX(-Math.PI / 2);
   dashes = new THREE.InstancedMesh(dg, new THREE.MeshBasicMaterial({ color: '#f5d547' }), 40);
   for (var i = 0; i < 40; i++) { m4.makeTranslation(0, 0.02, 8 - i * 3.5); dashes.setMatrixAt(i, m4); }
@@ -171,19 +185,42 @@ function buildFinish() {
 }
 
 // ---------- the street: one object per house, customer and order badge ----------
+// the colours and scenery of the neighborhood this street is in
+function applyTheme() {
+  var key = G.hood ? G.hood.key : 'suburb';
+  if (key === themeKey) return;
+  themeKey = key; theme = THEMES[key] || THEMES.suburb;
+  scene.background.set(theme.haze); scene.fog.color.set(theme.haze); hemi.groundColor.set(theme.under);
+  grassMat.color.set(theme.grass); roadMat.color.set(theme.road); walkMat.color.set(theme.walk); dashes.material.color.set(theme.dash);
+  ocean.visible = theme.ocean;
+}
 function rebuildStreet() {
   var i;
   lotsRef = G.lots;
+  applyTheme();
   while (world.children.length) world.remove(world.children[0]);
-  lotObjs = []; obsMap.clear();
+  // nearly every house is its own shape, so last street's are thrown away; yards come in a few layouts and are kept
+  for (i = 0; i < houseGeos.length; i++) houseGeos[i].dispose();
+  houseGeos = []; lotObjs = []; obsMap.clear();
+  var beach = themeKey === 'beach', made = {};
   for (i = 0; i < G.lots.length; i++) {
-    var l = G.lots[i], left = l.side < 0, o = { l: l, house: null, person: null, arms: null, box: null, marker: null, wins: [] };
-    var tree = l.ph > 2.6, key = 'h|' + l.roof[0] + '|' + (l.cust ? 1 : 0) + '|' + l.slot + '|' + (tree ? 1 : 0);
-    o.house = mesh(cached(key, houseMaker(l, tree)));
+    var l = G.lots[i], left = l.side < 0, o = { l: l, house: null, yard: null, person: null, arms: null, box: null, marker: null, wins: [] };
+    // what a lot looks like is read off numbers the street builder already made, so it is the same for every player
+    var pair = i >> 1, f = function (k, n) { return Math.floor(l.ph * k) % n; };
+    var ho = { slot: l.slot, cust: l.cust, variant: f(5, 3), roof: l.roof[0], roof2: l.roof[1],
+      wall: l.cust ? theme.walls[f(7, theme.walls.length)] : theme.dull[f(7, theme.dull.length)],
+      door: l.cust ? (beach ? '#1f9bb3' : '#c2262c') : '#5a4634', porch: l.cust ? theme.porch : '#9d9d97', mat: l.cust ? '#ffd23f' : '#8b8b86' };
+    var yo = { hood: themeKey, cust: l.cust, tree: beach ? (f(3.7, 3) ? 1 : 0) : f(3.7, 4), fence: !beach && f(11, 3) === 0, lamp: (pair + (left ? 0 : 2)) % 4 === 0, prop: f(13, 5) };
+    if (yo.prop > 3) yo.prop = 0;
+    var hk = [themeKey, ho.roof, ho.cust, ho.slot, ho.variant, ho.wall].join('|'), hg = made[hk];
+    if (!hg) { hg = made[hk] = beach ? M.beachHouseGeo(ho) : M.houseGeo(ho); houseGeos.push(hg); }
+    o.house = mesh(hg);
     o.house.receiveShadow = true;
     o.house.position.set(X(left ? WALL_L : WALL_R), 0, Z(l.y0 + 105));
-    if (!left) o.house.scale.x = -1;
-    world.add(o.house);
+    o.yard = mesh(cached(['y', themeKey, yo.cust && !yo.tree ? 1 : 0, yo.tree, yo.fence, yo.lamp, yo.prop].join('|'), function () { return M.yardGeo(yo); }));
+    o.yard.position.copy(o.house.position);
+    if (!left) { o.house.scale.x = -1; o.yard.scale.x = -1; }
+    world.add(o.house, o.yard);
     if (l.cust) {
       var c = l.c, pk = 'p|' + c.shirt + c.skin + c.hair;
       o.person = new THREE.Group();
@@ -200,12 +237,6 @@ function rebuildStreet() {
   finish.position.set(0, 0.03, Z(G.finishY));
   shop.position.set(X(416), 0, Z(G.finishY + 115));
 }
-function houseMaker(l, tree) {
-  return function () {
-    return M.houseGeo({ slot: l.slot, cust: l.cust, tree: tree, roof: l.roof[0], roof2: l.roof[1],
-      wall: l.cust ? '#f4ead2' : '#cfcabb', door: l.cust ? '#c2262c' : '#5a4634', porch: l.cust ? '#c58d4e' : '#9d9d97', mat: l.cust ? '#ffd23f' : '#8b8b86' });
-  };
-}
 function personMaker(c) { return function () { return M.personGeo(c.shirt, c.skin, c.hair); }; }
 function armsMaker(skin) { return function () { return M.armsGeo(skin); }; }
 
@@ -213,7 +244,7 @@ function syncLots(t) {
   var lo = G.cam - 340, hi = G.cam + cam.ahead * UNIT + 140;
   for (var i = 0; i < lotObjs.length; i++) {
     var o = lotObjs[i], l = o.l, on = l.y0 > lo && l.y0 < hi;
-    o.house.visible = on;
+    o.house.visible = on; o.yard.visible = on;
     for (var k = 0; k < l.wins.length; k++) {
       var w = l.wins[k];
       if (w.broken && !o.wins[k]) {
@@ -250,6 +281,9 @@ function makeObs(o) {
   else if (t === 'pothole') g.add(mesh(cached('pothole', M.potholeGeo), toon, false));
   else if (t === 'puddle') g.add(mesh(cached('puddle', M.puddleGeo), toon, false));
   else if (t === 'barrier') g.add(mesh(cached('barrier', M.barrierGeo)));
+  else if (t === 'sand') g.add(mesh(cached('sand', M.sandGeo), toon, false));
+  else if (t === 'surfer') { g.add(mesh(cached('surfer|' + o.col + o.board, function () { return M.surferGeo(o.col, o.board); }))); g.rotation.y = o.side > 0 ? Math.PI : 0; }
+  else if (t === 'cart') { m = mesh(cached('cart|' + o.col, function () { return M.cartGeo(o.col); })); m.scale.setScalar(0.92); g.add(m); }
   else if (t === 'ball') g.add(mesh(cached('ball|' + o.col, function () { return M.ballGeo(o.col); })));
   else if (t === 'life') {
     m = mesh(cached('heart', M.heartGeo)); m.scale.setScalar(1.25); m.position.y = 0.9; g.add(m); g.userData.spin = m;
@@ -258,7 +292,8 @@ function makeObs(o) {
   }
   else if (t === 'dog') g.add(mesh(cached('dog|' + o.col, function () { return M.dogGeo(o.col); })));
   else if (t === 'carD' || t === 'carU' || t === 'dcar') {
-    m = mesh(cached('car|' + o.col, function () { return M.carGeo(o.col); })); m.scale.setScalar(0.74); g.add(m);
+    var truck = o.col.charCodeAt(2) % 3 === 0;   // some colours are pickup trucks
+    m = mesh(cached((truck ? 'truck|' : 'car|') + o.col, function () { return truck ? M.truckGeo(o.col) : M.carGeo(o.col); })); m.scale.setScalar(0.74); g.add(m);
     g.rotation.y = t === 'carD' ? Math.PI : t === 'dcar' ? (o.side < 0 ? Math.PI / 2 : -Math.PI / 2) : 0;
   } else if (t === 'skater') {
     g.add(mesh(cached('board', M.skateboardGeo)));
@@ -297,6 +332,8 @@ function syncObs() {
       y = o.st === 2 || o.st === 3 ? Math.abs(Math.sin(o.t * 20)) * 0.12 : o.st === 1 ? Math.abs(Math.sin(o.t * 9)) * 0.06 : 0;
     }
     else if (o.type === 'skater') g.rotation.y = Math.PI + Math.cos(o.t * 3) * 0.2;
+    else if (o.type === 'surfer') y = o.st === 1 ? Math.abs(Math.sin(o.t * 9)) * 0.07 : 0;
+    else if (o.type === 'cart') g.rotation.y = -Math.cos(o.t * 0.9 + o.ph) * 0.18;   // it leans the way it drifts
     g.position.set(X(o.x), y, Z(o.y));
   }
   obsMap.forEach(function (e2, key) { if (e2.stamp !== stamp) { world.remove(e2.g); obsMap.delete(key); } });

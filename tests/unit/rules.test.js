@@ -27,6 +27,7 @@ describe('landing a pizza', () => {
     let thrown = 0, landed = 0;
     for (const [seed, day] of [[1001, 1], [1002, 5], [1003, 9], [1004, 3]]) {
       start(seed, day, 0);
+      G.opt.ghost = true;   // nothing can end the run while a pizza is in the air
       let guard = 0;
       while (G.state === 'play' && guard++ < 20000) {
         const before = G.stats.delivered, side = guard % 2 ? -1 : 1, a = aimAt(side);

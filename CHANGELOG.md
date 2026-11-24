@@ -5,7 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Planned for v0.4.0 (Phase 4, suburb, rides and the beach town): the finished look for today's suburb, its props, traffic and shop, and the four rides; neighborhoods that change each week on a four-week cycle, each with its own obstacles; the beach town as the first new one; day and dusk; a low-effects setting. Downtown and the snowy town follow in v0.5.0, and new rides in v0.6.0.
+Phase 4 (suburb, rides and the beach town), in progress. Each part goes to the beta address for Cam's review; it becomes v0.4.0 when the whole phase passes its gate. Still to come in this phase: the finished four rides and the shop, day and dusk lighting, and a low-effects setting. Downtown and the snowy town follow in v0.5.0, and new rides in v0.6.0.
+
+### Added
+- **Neighborhoods.** The street changes each week. Week 1 is Maple Street, the suburb; week 2 is the beach town; then the cycle repeats while the difficulty keeps climbing. The banner at the start of a shift names the week and the neighborhood. (`src/hoods.js`; downtown and the snowy town will make it a four-week cycle.)
+- **The beach town**, with its own look: pastel houses under striped awning roofs with wooden decks, palm trees, umbrellas, sandcastles, sand in place of lawns, a boardwalk in place of the sidewalk, and the sea behind the houses on the left.
+- **Beach town obstacles.** Sand drifts drag the ride down to 60% speed while it is in them and cost no life. Surfers wait at the curb and carry a board across the street when you get close. Golf carts putter up the street, drifting from one lane to the other. Surfers and carts hurt every ride. No dogs at the beach, and few cars backing out.
+- **A fuller suburb.** Three house shapes (a dormer, two storeys, a side garage), six wall colours, shutters, window boxes on houses that ordered, round, pine and blossom trees, picket fences, street lamps, flamingos, paddling pools and bird baths. Some traffic is now pickup trucks.
+- 8 more unit tests (93 in all) for neighborhoods and the beach obstacles.
+
+### Changed
+- The aiming ring now works out where a pacing customer will be when the pizza arrives, so it lights for them more often and still never promises a delivery that misses.
+- Each street's houses are built when the street starts and thrown away when the next one does, so memory does not grow as the weeks go by.
+- The recorded test streets were re-recorded (`npm run record`): day 14 is now a beach town street.
 
 ## [0.3.0] - 2026-11-23 — Deeper gameplay
 

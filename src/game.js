@@ -7,6 +7,7 @@ import { save, writeSave } from './save.js';
 import { sfx } from './audio.js';
 import { buildBonus, buildShift, lotAt, mk } from './world.js';
 import { tune } from './tuning.js';
+import { hoodOf } from './hoods.js';
 
 // A run starts on Monday. startRun(day) continues from a later day instead: the day and the bank are
 // kept, but the score starts again from zero, so a score on the boards is always earned in one go.
@@ -26,13 +27,13 @@ export function nextShift(){
   G.day++;startShift();
 }
 function begin(bonus){
-  G.bonus=bonus;G.ride=G.opt.ride!=null?G.opt.ride:save.ride;G.V=VEH[G.ride];G.T=tune(G.day);
+  G.bonus=bonus;G.ride=G.opt.ride!=null?G.opt.ride:save.ride;G.V=VEH[G.ride];G.T=tune(G.day);G.hood=hoodOf(G.day);
   // the same day always gets the same street and the same traffic
   seed((G.runSeed!=null?G.runSeed+(G.day-G.day0):shiftSeed(G.day))+(bonus?7777:0));G.step=0;
   var orders=bonus?buildBonus(G.day):buildShift(G.day);
   G.cam=0;P.x=P.tx=280;P.sy=P.ty=590;G.heat=100;G.streak=0;G.pizzas=G.V.cap;G.shieldLeft=bonus?0:G.V.shield;
-  G.inv=0;G.stun=0;G.slip=0;G.shake=0;G.throwCd=0;G.throwAnim=0;G.lifeFlash=0;
-  G.carT=rnd(1.5,3);G.slowT=rnd(3,5);G.skateT=rnd(4,8);G.bannerT=2.4;if(G.day===1&&!bonus)G.hintT=9;
+  G.inv=0;G.stun=0;G.slip=0;G.sand=0;G.shake=0;G.throwCd=0;G.throwAnim=0;G.lifeFlash=0;
+  G.carT=rnd(1.5,3);G.slowT=rnd(3,5);G.skateT=rnd(4,8);G.cartT=G.T.cart?rnd(4,8):0;G.bannerT=2.4;if(G.day===1&&!bonus)G.hintT=9;
   G.stats={orders:orders,delivered:0,hand:0,door:0,smash:0,missed:0,tips:0,crashes:0,bonks:0,fed:0};G.dogTip=false;
   if(!bonus&&G.opt.day==null&&save.cont!==G.day){save.cont=G.day;writeSave();}   // where Continue picks up from
   G.state='play';
@@ -152,7 +153,7 @@ export function update(dt){
   if(G.state!=='play')return;
   G.step++;
 
-  if(G.inv>0)G.inv-=dt;if(G.stun>0)G.stun-=dt;if(G.slip>0)G.slip-=dt;if(G.throwCd>0)G.throwCd-=dt;if(G.throwAnim>0)G.throwAnim-=dt;
+  if(G.inv>0)G.inv-=dt;if(G.stun>0)G.stun-=dt;if(G.slip>0)G.slip-=dt;if(G.sand>0)G.sand-=dt;if(G.throwCd>0)G.throwCd-=dt;if(G.throwAnim>0)G.throwAnim-=dt;
   if(G.bannerT>0)G.bannerT-=dt;if(G.hintT>0)G.hintT-=dt;
 
   // steering (a puddle makes the ride slide: it answers the wheel slowly for a moment)
@@ -167,7 +168,7 @@ export function update(dt){
   // G.speed: higher on the screen = faster
   var f=(YMAX-P.sy)/(YMAX-YMIN);
   var base=(G.bonus?190:G.T.speed)*G.V.spd;
-  G.speed=base*(0.8+0.5*f)*(G.stun>0?0.35:1);
+  G.speed=base*(0.8+0.5*f)*(G.stun>0?0.35:1)*(G.sand>0?0.6:1);   // sand drags the ride down while it is in it
   G.cam+=G.speed*dt;
   G.heat=Math.max(0,G.heat-6.5*G.V.heat*dt);
   var py=G.cam+H-P.sy;
@@ -176,6 +177,8 @@ export function update(dt){
   var nearEnd=G.bonus||G.cam+AHEAD>G.finishY-80;
   G.carT-=dt;if(G.carT<=0&&!nearEnd){G.carT=rnd(G.T.carDown,G.T.carDown+2.2);o=mk('carD',200+rnd(-8,8),G.cam+AHEAD);o.vy=-(110+rnd(0,90));G.obs.push(o);}
   G.slowT-=dt;if(G.slowT<=0&&!nearEnd){G.slowT=rnd(G.T.carUp,G.T.carUp+3);o=mk('carU',280+rnd(-8,8),G.cam+AHEAD);o.vy=base*0.42;G.obs.push(o);}
+  // a golf cart putters up the street, drifting from one lane to the other and back
+  if(G.T.cart){G.cartT-=dt;if(G.cartT<=0&&!nearEnd){G.cartT=rnd(G.T.cart[0],G.T.cart[1]);o=mk('cart',240,G.cam+AHEAD);o.vy=base*0.5;o.ph=rnd(0,6.28);G.obs.push(o);}}
   if(G.T.skater){G.skateT-=dt;if(G.skateT<=0&&!nearEnd){G.skateT=rnd(G.T.skater[0],G.T.skater[1]);o=mk('skater',chance(0.5)?145:335,G.cam+AHEAD-30);o.bx=o.x;o.vy=-70;G.obs.push(o);}}
 
   updCustomers(dt,py);
@@ -215,6 +218,11 @@ export function update(dt){
       if(o.st===1&&sy>310){o.st=2;}
       if(o.st===2){o.x+=-o.side*88*dt;var stop=o.side<0?205:275;if((o.side<0&&o.x>=stop)||(o.side>0&&o.x<=stop)){o.x=stop;o.st=3;}}
     }else if(o.type==='skater'){o.x=o.bx+Math.sin(o.t*3)*9;}
+    else if(o.type==='cart')o.x=240+Math.sin(o.t*0.9+o.ph)*42;
+    else if(o.type==='surfer'){   // waits at the curb, then carries the board across once you are close
+      if(o.st===0&&o.y-py<430&&sy<H)o.st=1;
+      if(o.st===1){o.x+=-o.side*70*dt;if(o.x<116||o.x>364){G.obs.splice(i,1);continue;}}
+    }
     else if(o.type==='ball'){   // rolls across the street once you are close
       if(o.st===0&&sy>240&&sy<H)o.st=1;
       if(o.st===1){o.x+=-o.side*95*dt;if(o.x<112||o.x>368){G.obs.splice(i,1);continue;}}
@@ -230,6 +238,7 @@ export function update(dt){
         else{G.score+=250;pop(P.x,py,'FULL LIVES  +250','#ff6b7d',16,40);}
         continue;
       }
+      if(o.type==='sand'){G.sand=0.3;if(!o.hit){o.hit=true;sfx('sand');pop(P.x,py,'SAND!','#e8c877',15,34);}continue;}
       if(o.type==='puddle'){if(!o.hit){o.hit=true;G.slip=0.9;G.heat=Math.max(0,G.heat-10);sfx('splash');pop(P.x,py,'SPLASH!','#7fd4ff',15,34);}continue;}
       if(G.V.perk.indexOf(o.type)>=0){   // a pothole is simply ridden over
         if(o.type!=='pothole')knock(o);else if(!o.hit){o.hit=true;pop(P.x,py,'SMOOTH!','#5ad1ff',12,30);}
@@ -316,7 +325,7 @@ export function resolvePie(p){
   return false;
 }
 
-export function toTitle(){G.state='title';G.bonus=false;G.day=3;G.T=tune(3);seed(shiftSeed(3));buildShift(3);G.cam=0;}
+export function toTitle(){G.state='title';G.bonus=false;G.day=3;G.T=tune(3);G.hood=hoodOf(3);seed(shiftSeed(3));buildShift(3);G.cam=0;}
 
 // Where a pizza thrown right now to one side would land, and what it would hit.
 // The 3D view draws this as an aiming mark, so throwing is about position, not guesswork.
@@ -336,9 +345,10 @@ export function aimAt(side){
     if(l.side!==side||!l.cust||l.delivered||l.missed||l.claim>G.step||Math.abs(l.y0+105-y)>170)continue;
     // The mark promises a little less than the rules allow, so a throw on a lit mark always lands.
     // A customer who is walking may have moved by the time the pizza arrives, so they need a truer aim.
-    var c=l.c,moving=c.type==='pacer'||(c.type==='curb'&&Math.abs(c.cx-c.x)>1);
-    var yc=py+G.speed*Math.abs(c.x-x0)/PIE_SPEED;
-    if(!c.gone&&Math.abs(yc-c.y)<(moving?HAND_R-11:HAND_R-3)){hit='hand';lot=l;break;}
+    var c=l.c,pacer=c.type==='pacer',walking=c.type==='curb'&&Math.abs(c.cx-c.x)>1;
+    var ta=Math.abs(c.x-x0)/PIE_SPEED,yc=py+G.speed*ta;
+    var cy=pacer?c.by+Math.sin((G.tGame+ta)*2.1+c.ph)*30:c.y;   // where a pacer will be when the pizza gets there
+    if(!c.gone&&Math.abs(yc-cy)<(pacer?HAND_R-7:walking?HAND_R-11:HAND_R-3)){hit='hand';lot=l;break;}
     if(Math.abs(y-l.doorY)<=DOOR_HALF-3){hit='door';lot=l;}
   }
   if(hit==='wall'){var w=lotAt(side,y);if(w&&y-w.y0>=HY0&&y-w.y0<=HY1)for(var k=0;k<w.wins.length;k++)if(!w.wins[k].broken&&Math.abs(y-w.wins[k].y)<=WIN_HALF)hit='window';}

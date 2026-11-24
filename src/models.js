@@ -60,40 +60,130 @@ export function splatGeo() {
 // Built for the left side of the street: the front wall is at x = 0 and the house runs back along -x.
 // The right side uses the same shape mirrored. `slot` is which of three places along the front has
 // the door; the other two have windows. The roof has no overhang at the front, so a camera looking
-// down can still see the door.
+// down can still see the door. +z is down the street (toward the camera), so the driveway end of a
+// lot is +z and the garden end is -z.
 export var SLOT_Z = [2.15, 0, -2.15];
+export function bx(w, h, d) { return new THREE.BoxGeometry(w, h, d); }           // a plain box: 12 triangles, for small parts
+export function blob(r) { return new THREE.IcosahedronGeometry(r, 0); }          // a rough ball: 20 triangles
+function cone(r, h, seg) { return new THREE.ConeGeometry(r, h, seg || 8); }
+var WHITE = '#ffffff', PANE = '#9ad8ff';
+
+// what every house front has: door, porch, mat, walkway, mailbox, and a window in the other two slots
+function frontParts(p, o, deck) {
+  var zs = SLOT_Z[o.slot], i, k;
+  p.push(part(box(0.16, 2.3, 1.56, 0.04), WHITE, [0.05, 1.15, zs]));
+  p.push(part(box(0.2, 2.05, 1.24, 0.04), o.door, [0.09, 1.03, zs]));
+  p.push(part(bx(0.04, 0.5, 0.7), '#cfeaff', [0.2, 1.62, zs]));
+  p.push(part(blob(0.07), '#ffd23f', [0.2, 1.05, zs - 0.4]));
+  p.push(part(blob(0.09), '#fff6c9', [0.14, 2.3, zs + 0.98]));
+  if (!deck) p.push(part(box(1.05, 0.22, 2.1, 0.06), o.porch, [0.52, 0.11, zs]));
+  p.push(part(box(0.56, 0.05, 1.1, 0.02), o.mat, [0.6, 0.235, zs]));
+  p.push(part(bx(0.68, 0.07, 0.7), deck ? '#e9d7a3' : '#d8d2c0', [1.38, 0.035, zs]));
+  p.push(part(bx(0.09, 0.8, 0.09), '#f4f6fa', [1.5, 0.4, zs + 1.4]));
+  p.push(part(box(0.26, 0.24, 0.44, 0.08), o.cust ? '#2f6fd6' : '#8d939e', [1.5, 0.86, zs + 1.4]));
+  for (i = 0; i < 3; i++) if (i !== o.slot) {
+    var z = SLOT_Z[i];
+    p.push(part(box(0.14, 1.4, 1.5, 0.04), WHITE, [0.04, 1.75, z]));
+    p.push(part(box(0.18, 1.1, 1.2, 0.03), PANE, [0.07, 1.75, z]));
+    p.push(part(bx(0.2, 1.1, 0.05), WHITE, [0.08, 1.75, z]));
+    p.push(part(bx(0.08, 1.3, 0.3), o.roof2, [0.05, 1.75, z - 0.93])); p.push(part(bx(0.08, 1.3, 0.3), o.roof2, [0.05, 1.75, z + 0.93]));
+    if (o.cust) {   // a window box in bloom: houses that ordered look lived in
+      p.push(part(bx(0.34, 0.2, 1.4), '#8a5a35', [0.24, 0.92, z]));
+      for (k = -1; k <= 1; k++) p.push(part(blob(0.15), k ? '#ff6fae' : '#ffd23f', [0.26, 1.1, z + k * 0.42]));
+    }
+  }
+}
+// The suburb. variant 0: a dormer on the roof; 1: two storeys; 2: a garage at the driveway end.
 export function houseGeo(o) {
-  var p = [], zs = SLOT_Z[o.slot], i;
-  p.push(part(box(4.1, 3.0, 6.5, 0.16), o.wall, [-2.05, 1.5, 0]));
+  var p = [], i, v = o.variant | 0, hh = v === 1 ? 4.3 : 3.0;
+  p.push(part(box(4.1, hh, 6.5, 0.16), o.wall, [-2.05, hh / 2, 0]));
+  p.push(part(bx(4.16, 0.28, 6.56), '#a9a59a', [-2.05, 0.14, 0]));
   var tri = new THREE.Shape();
   tri.moveTo(-4.25, 0); tri.lineTo(0.1, 0); tri.lineTo(-2.07, 1.55); tri.closePath();
-  p.push(part(new THREE.ExtrudeGeometry(tri, { depth: 6.8, bevelEnabled: false }), o.roof, [0, 2.98, -3.4]));
-  p.push(part(box(0.3, 0.16, 6.95, 0.05), o.roof2, [-2.07, 4.55, 0]));
-  p.push(part(box(0.55, 1.0, 0.55, 0.06), '#7b3f2a', [-3.15, 4.2, 1.9]));
-  // door, porch, mat, walkway
-  p.push(part(box(0.16, 2.3, 1.56, 0.04), '#ffffff', [0.05, 1.15, zs]));
-  p.push(part(box(0.2, 2.05, 1.24, 0.04), o.door, [0.09, 1.03, zs]));
-  p.push(part(ball(0.07), '#ffd23f', [0.2, 1.05, zs - 0.4]));
-  p.push(part(box(1.05, 0.22, 2.1, 0.06), o.porch, [0.52, 0.11, zs]));
-  p.push(part(box(0.56, 0.05, 1.1, 0.02), o.mat, [0.6, 0.235, zs]));
-  p.push(part(box(0.68, 0.07, 0.7, 0.02), '#d8d2c0', [1.38, 0.035, zs]));
-  // windows
-  for (i = 0; i < 3; i++) if (i !== o.slot) {
-    p.push(part(box(0.14, 1.4, 1.5, 0.04), '#ffffff', [0.04, 1.75, SLOT_Z[i]]));
-    p.push(part(box(0.18, 1.1, 1.2, 0.03), '#9ad8ff', [0.07, 1.75, SLOT_Z[i]]));
-  }
-  // driveway, mailbox, garden
-  p.push(part(box(5.5, 0.06, 1.5, 0.02), '#b9b5a8', [-1.05, 0.03, 4.3]));
-  p.push(part(box(0.09, 0.8, 0.09, 0.02), '#f4f6fa', [1.5, 0.4, zs + 1.4]));
-  p.push(part(box(0.26, 0.24, 0.44, 0.08), o.cust ? '#2f6fd6' : '#8d939e', [1.5, 0.86, zs + 1.4]));
-  if (o.tree) {
-    p.push(part(cyl(0.2, 2.0, 7), '#9a6b3f', [-2.3, 1.0, -4.35]));
-    p.push(part(ball(1.15), '#35b84e', [-2.3, 2.8, -4.35]));
-    p.push(part(ball(0.8), '#4fd063', [-1.85, 3.55, -4.1]));
+  p.push(part(new THREE.ExtrudeGeometry(tri, { depth: 6.8, bevelEnabled: false }), o.roof, [0, hh - 0.02, -3.4]));
+  p.push(part(box(0.3, 0.16, 6.95, 0.05), o.roof2, [-2.07, hh + 1.53, 0]));
+  p.push(part(bx(0.16, 0.14, 6.84), WHITE, [0.06, hh + 0.03, 0]));
+  p.push(part(box(0.55, 1.0, 0.55, 0.06), '#8a4a33', [-3.15, hh + 1.2, 1.9])); p.push(part(bx(0.66, 0.12, 0.66), '#5d3323', [-3.15, hh + 1.74, 1.9]));
+  if (v === 0) {
+    var dz = SLOT_Z[(o.slot + 1) % 3];
+    p.push(part(box(1.1, 0.8, 1.2, 0.06), o.wall, [-0.85, hh + 0.62, dz]));
+    p.push(part(bx(0.06, 0.5, 0.7), PANE, [-0.29, hh + 0.66, dz]));
+    p.push(part(box(1.3, 0.14, 1.44, 0.04), o.roof2, [-0.85, hh + 1.08, dz]));
+  } else if (v === 1) {
+    p.push(part(bx(0.1, 0.1, 6.5), WHITE, [0.04, 2.72, 0]));
+    for (i = 0; i < 3; i++) { p.push(part(bx(0.1, 1.0, 1.2), WHITE, [0.04, 3.42, SLOT_Z[i]])); p.push(part(bx(0.12, 0.8, 1.0), PANE, [0.06, 3.42, SLOT_Z[i]])); }
   } else {
-    p.push(part(ball(0.62), '#35b84e', [-1.2, 0.45, -4.4], null, [1.3, 0.85, 1]));
-    p.push(part(ball(0.42), o.cust ? '#ff6fae' : '#7fae6a', [-0.2, 0.32, -4.5]));
+    p.push(part(box(2.6, 2.3, 1.95, 0.08), o.wall, [-2.7, 1.15, 4.3]));
+    p.push(part(box(2.8, 0.16, 2.15, 0.05), o.roof2, [-2.7, 2.38, 4.3]));
+    p.push(part(bx(0.08, 1.8, 1.6), '#f4f6fa', [-1.38, 0.9, 4.3]));
+    p.push(part(bx(0.09, 0.05, 1.6), '#c9ced6', [-1.37, 0.7, 4.3])); p.push(part(bx(0.09, 0.05, 1.6), '#c9ced6', [-1.37, 1.3, 4.3]));
   }
+  frontParts(p, o, false);
+  p.push(part(bx(5.5, 0.06, 1.5), '#b9b5a8', [-1.05, 0.03, 4.3]));
+  return merge(p);
+}
+// The beach town: a flat roof under striped awning boards, a wooden deck along the whole front.
+export function beachHouseGeo(o) {
+  var p = [], i, zs = SLOT_Z[o.slot];
+  p.push(part(box(4.1, 3.0, 6.5, 0.16), o.wall, [-2.05, 1.5, 0]));
+  p.push(part(box(4.5, 0.2, 6.9, 0.06), WHITE, [-2.05, 3.08, 0]));
+  for (i = 0; i < 5; i++) p.push(part(bx(0.84, 0.07, 6.7), i % 2 ? WHITE : o.roof, [-3.73 + i * 0.84, 3.21, 0]));
+  p.push(part(box(0.9, 0.5, 0.9, 0.06), '#d9dde4', [-3.0, 3.5, -2.0])); p.push(part(cyl(0.3, 0.06, 8), '#aab2bd', [-3.0, 3.77, -2.0]));   // air conditioner
+  p.push(part(bx(1.5, 0.2, 6.5), '#c9a36b', [0.75, 0.1, 0])); p.push(part(bx(1.5, 0.21, 0.05), '#a9844f', [0.75, 0.1, -1.1])); p.push(part(bx(1.5, 0.21, 0.05), '#a9844f', [0.75, 0.1, 1.1]));
+  frontParts(p, o, true);
+  if (o.cust) {   // boards by the door
+    p.push(part(box(0.1, 1.9, 0.5, 0.05), '#3ec1d3', [0.16, 0.98, zs + 1.15], [0, 0, -0.1])); p.push(part(box(0.1, 1.7, 0.46, 0.05), '#ff7a59', [0.2, 0.9, zs - 1.12], [0, 0, -0.14]));
+  }
+  p.push(part(bx(5.5, 0.06, 1.5), '#e3d2a2', [-1.05, 0.03, 4.3]));
+  return merge(p);
+}
+// What stands in a yard. Kept apart from the house so the few yard layouts can be shared by every house.
+// tree: 0 bushes, 1 round tree, 2 pine, 3 blossom tree (beach: 0 beach grass, otherwise a palm).
+// prop: 1 flamingos, 2 paddling pool, 3 bird bath (beach: 1 umbrella and towel, 2 sandcastle, 3 boards in the sand).
+export function yardGeo(o) {
+  var p = [], j;
+  if (o.hood === 'beach') {
+    if (o.tree) {
+      for (j = 0; j < 4; j++) p.push(part(cyl(0.2 - j * 0.02, 0.85, 6), j % 2 ? '#b98f5e' : '#a67c4d', [-2.3 + j * 0.14, 0.42 + j * 0.8, -4.35]));
+      for (j = 0; j < 6; j++) p.push(part(bx(1.7, 0.06, 0.46), j % 2 ? '#2fae5a' : '#3cc46b', [-1.75 + Math.cos(j * 1.047) * 0.8, 3.45, -4.35 + Math.sin(j * 1.047) * 0.8], [0, -j * 1.047, -0.38]));
+      p.push(part(blob(0.16), '#6b4a2b', [-1.65, 3.4, -4.25])); p.push(part(blob(0.16), '#6b4a2b', [-1.85, 3.38, -4.5]));
+    } else for (j = 0; j < 4; j++) p.push(part(cone(0.16, 0.7, 5), '#9bbf5a', [-1.4 + j * 0.42, 0.35, -4.4 + (j % 2) * 0.3]));
+    if (o.prop === 1) {
+      p.push(part(cyl(0.04, 1.7, 5), WHITE, [0.85, 0.85, -4.3])); p.push(part(cone(0.95, 0.42, 8), '#ff5a5f', [0.85, 1.75, -4.3])); p.push(part(cone(0.5, 0.25, 8), WHITE, [0.85, 1.9, -4.3]));
+      p.push(part(bx(0.7, 0.04, 1.3), '#3ec1d3', [0.8, 0.03, -3.75]));
+    } else if (o.prop === 2) {
+      p.push(part(cyl(0.45, 0.3, 8), '#e6cf8f', [0.9, 0.15, -4.3])); p.push(part(cyl(0.26, 0.3, 8), '#e6cf8f', [0.9, 0.45, -4.3])); p.push(part(cone(0.16, 0.3, 6), '#ff5a5f', [0.9, 0.75, -4.3]));
+    } else if (o.prop === 3) {
+      p.push(part(box(0.5, 1.8, 0.1, 0.05), '#ffd23f', [0.7, 0.85, -4.3], [0.12, 0.3, 0])); p.push(part(box(0.5, 1.6, 0.1, 0.05), '#ff7a59', [1.15, 0.75, -4.1], [-0.1, -0.3, 0]));
+    }
+  } else {
+    if (o.tree === 1) {
+      p.push(part(cyl(0.2, 2.0, 7), '#9a6b3f', [-2.3, 1.0, -4.35])); p.push(part(ball(1.15), '#35b84e', [-2.3, 2.8, -4.35])); p.push(part(blob(0.8), '#4fd063', [-1.85, 3.55, -4.1]));
+    } else if (o.tree === 2) {
+      p.push(part(cyl(0.16, 1.0, 6), '#7d5a36', [-2.3, 0.5, -4.35]));
+      p.push(part(cone(1.15, 1.5, 8), '#2f9e55', [-2.3, 1.6, -4.35])); p.push(part(cone(0.9, 1.3, 8), '#37b061', [-2.3, 2.5, -4.35])); p.push(part(cone(0.62, 1.1, 8), '#43c06e', [-2.3, 3.3, -4.35]));
+    } else if (o.tree === 3) {
+      p.push(part(cyl(0.18, 1.8, 7), '#8a5a3c', [-2.3, 0.9, -4.35])); p.push(part(ball(1.05), '#ff9ec4', [-2.3, 2.6, -4.35])); p.push(part(blob(0.7), '#ffc4dc', [-2.7, 3.2, -4.6]));
+    } else {
+      p.push(part(ball(0.62), '#35b84e', [-1.2, 0.45, -4.4], null, [1.3, 0.85, 1])); p.push(part(blob(0.42), o.cust ? '#ff6fae' : '#7fae6a', [-0.2, 0.32, -4.5]));
+    }
+    if (o.fence) {
+      p.push(part(bx(4.6, 0.07, 0.06), WHITE, [-1.6, 0.5, -5.1])); p.push(part(bx(4.6, 0.07, 0.06), WHITE, [-1.6, 0.26, -5.1]));
+      for (j = 0; j < 5; j++) p.push(part(bx(0.1, 0.7, 0.1), WHITE, [-3.8 + j * 1.1, 0.35, -5.1]));
+    }
+    if (o.prop === 1) for (j = 0; j < 2; j++) {
+      p.push(part(bx(0.03, 0.5, 0.03), '#ff8fb1', [0.8 + j * 0.4, 0.25, -4.3 + j * 0.3])); p.push(part(blob(0.17), '#ff6fa3', [0.8 + j * 0.4, 0.58, -4.3 + j * 0.3]));
+      p.push(part(bx(0.05, 0.3, 0.05), '#ff6fa3', [0.92 + j * 0.4, 0.78, -4.3 + j * 0.3]));
+    } else if (o.prop === 2) {
+      p.push(part(cyl(0.72, 0.2, 12), '#ff7a59', [0.9, 0.1, -4.3])); p.push(part(cyl(0.6, 0.21, 12), '#4db8ff', [0.9, 0.1, -4.3]));
+    } else if (o.prop === 3) {
+      p.push(part(cyl(0.1, 0.6, 6), '#b9bcc4', [0.9, 0.3, -4.3])); p.push(part(cyl(0.2, 0.1, 10, 0.42), '#c9ccd4', [0.9, 0.65, -4.3])); p.push(part(cyl(0.34, 0.04, 10), '#7fd4ff', [0.9, 0.7, -4.3]));
+    }
+  }
+  if (o.lamp) {
+    p.push(part(cyl(0.07, 3.4, 6), '#4a4f5c', [1.6, 1.7, -5.0])); p.push(part(bx(0.7, 0.07, 0.07), '#4a4f5c', [1.9, 3.36, -5.0])); p.push(part(box(0.36, 0.13, 0.22, 0.04), '#fff6c9', [2.2, 3.3, -5.0]));
+  }
+  if (!p.length) p.push(part(bx(0.01, 0.01, 0.01), '#5fd14e', [0, -1, 0]));
   return merge(p);
 }
 export function brokenWindowGeo() {
@@ -178,6 +268,34 @@ export function barrierGeo() {
     p.push(part(box(0.4, 0.3, 0.1, 0.02), i % 2 ? '#ffffff' : '#ff7a1a', [-1.4 + i * 0.4, 0.82, 0]));
     p.push(part(box(0.4, 0.22, 0.1, 0.02), i % 2 ? '#ff7a1a' : '#ffffff', [-1.4 + i * 0.4, 0.42, 0]));
   }
+  return merge(p);
+}
+
+// ---------- beach town ----------
+export function sandGeo() {
+  return merge([part(cyl(1.4, 0.04, 14), '#f1dea6', [0, 0.02, 0], null, [1, 1, 0.8]), part(cyl(0.9, 0.05, 10), '#e6cf8f', [0.3, 0.03, 0.2], null, [1, 1, 0.6]),
+    part(bx(0.9, 0.05, 0.06), '#d9bf7a', [-0.4, 0.045, -0.35]), part(bx(0.7, 0.05, 0.06), '#d9bf7a', [0.2, 0.05, 0.55]), part(bx(0.6, 0.05, 0.06), '#d9bf7a', [-0.5, 0.045, 0.3])]);
+}
+// a surfer walking along +x with a board under one arm
+export function surferGeo(shirt, board) {
+  return merge([personGeo(shirt, '#d9a577', '#e6c35c', '#2f8fbf'), part(box(2.3, 0.1, 0.52, 0.05), board, [0.05, 1.0, 0.45]), part(bx(2.0, 0.11, 0.08), WHITE, [0.05, 1.0, 0.45]),
+    part(box(0.5, 0.16, 0.16, 0.06), '#d9a577', [0.1, 1.08, 0.3])]);
+}
+// a golf cart, nose toward -z, with a striped canopy
+export function cartGeo(col) {
+  var p = [part(box(1.2, 0.45, 2.0, 0.12), '#f7f3e8', [0, 0.55, 0]), part(box(1.0, 0.5, 0.5, 0.08), col, [0, 0.95, 0.35]), part(box(1.1, 0.35, 0.3, 0.06), '#f7f3e8', [0, 0.9, -0.75]),
+    part(box(1.3, 0.1, 2.0, 0.04), col, [0, 1.9, 0]), part(bx(1.32, 0.11, 0.42), WHITE, [0, 1.9, 0.5]), part(bx(1.32, 0.11, 0.42), WHITE, [0, 1.9, -0.5]),
+    part(cyl(0.16, 0.8, 6), '#3d7fd9', [0.3, 1.0, 0.95]), part(blob(0.12), WHITE, [0.3, 1.45, 0.95])];
+  for (var a = -1; a <= 1; a += 2) for (var b = -1; b <= 1; b += 2) { p.push(part(bx(0.06, 1.1, 0.06), '#d9dde4', [a * 0.56, 1.32, b * 0.86])); p.push(part(cyl(0.24, 0.2, 10), '#22242c', [a * 0.62, 0.24, b * 0.7], [0, 0, HALF])); }
+  return merge(p);
+}
+// a pickup truck, for variety in traffic
+export function truckGeo(color) {
+  var p = [part(box(1.8, 0.62, 3.7, 0.2, 2), color, [0, 0.66, 0]), part(box(1.56, 0.66, 1.4, 0.2, 2), '#bfe6ff', [0, 1.22, -0.55]), part(box(1.62, 0.12, 1.46, 0.05), color, [0, 1.58, -0.55]),
+    part(bx(1.5, 0.3, 1.5), DARK, [0, 1.0, 0.95]), part(box(1.84, 0.2, 0.26, 0.07), DARK, [0, 0.44, -1.82]), part(box(1.84, 0.2, 0.26, 0.07), DARK, [0, 0.44, 1.82]),
+    part(bx(0.34, 0.18, 0.08), '#fff6c9', [-0.56, 0.76, -1.86]), part(bx(0.34, 0.18, 0.08), '#fff6c9', [0.56, 0.76, -1.86]),
+    part(bx(0.3, 0.16, 0.08), '#ff3b30', [-0.6, 0.76, 1.86]), part(bx(0.3, 0.16, 0.08), '#ff3b30', [0.6, 0.76, 1.86])];
+  for (var a = -1; a <= 1; a += 2) for (var b = -1; b <= 1; b += 2) p.push(part(cyl(0.4, 0.3, 12), '#22242c', [a * 0.84, 0.4, b * 1.15], [0, 0, HALF]));
   return merge(p);
 }
 

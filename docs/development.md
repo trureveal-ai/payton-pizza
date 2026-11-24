@@ -48,7 +48,7 @@ Add these to the page address. None of them is saved.
 | Switch | What it does |
 | --- | --- |
 | `?seed=1001` | Plays that street instead of the day's own |
-| `?day=14` | Starts on that day. Continue is hidden and the saved Continue day is left alone |
+| `?day=14` | Starts on that day (day 8 is the first day of the beach town). Continue is hidden and the saved Continue day is left alone |
 | `?bonus=1` | Starts in the bonus round (the one after Sunday). Same rules as `?day` for Continue |
 | `?ride=3` | Rides that ride (0 hoverboard, 1 dirt bike, 2 Bimmer, 3 van) without owning it |
 | `?fps=1` | Shows the frame-rate readout (the F key toggles it) |
@@ -75,6 +75,7 @@ Rollback: re-run the Deploy workflow from the previous good commit.
 | `src/rng.js` | Seeded random numbers and each day's street seed |
 | `src/world.js` | Builds a street for a shift, and the bonus round's street |
 | `src/tuning.js` | Every number that changes with the day: speed, street length, hazards, traffic, customers, pickups |
+| `src/hoods.js` | The neighborhoods and which one a day is in. A neighborhood's obstacles are switched on in `tuning.js`; its look is a theme in `render3d.js` and its houses and yards are in `models.js` |
 | `src/game.js` | Rules and the per-step update |
 | `src/render3d.js` | The 3D street and its fixed camera (Three.js). Reads the state, never changes it |
 | `src/models.js` | 3D shapes, each built in code and merged into one mesh |
