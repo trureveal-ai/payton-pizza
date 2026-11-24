@@ -5,16 +5,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Phase 4 (suburb, rides and the beach town), in progress. Each part goes to the beta address for Cam's review; it becomes v0.4.0 when the whole phase passes its gate. Still to come in this phase: the finished four rides and the shop, day and dusk lighting, and a low-effects setting. Downtown and the snowy town follow in v0.5.0, and new rides in v0.6.0.
+Phase 4 (suburb, rides and the beach town). Everything planned for the phase is now on the beta address for Cam's review; it becomes v0.4.0 when he approves the look and his phone holds a smooth frame rate in both neighborhoods. Downtown and the snowy town follow in v0.5.0, and new rides in v0.6.0.
 
 ### Added
 - **Neighborhoods.** The street changes each week. Week 1 is Maple Street, the suburb; week 2 is the beach town; then the cycle repeats while the difficulty keeps climbing. The banner at the start of a shift names the week and the neighborhood. (`src/hoods.js`; downtown and the snowy town will make it a four-week cycle.)
 - **The beach town**, with its own look: pastel houses under striped awning roofs with wooden decks, palm trees, umbrellas, sandcastles, sand in place of lawns, a boardwalk in place of the sidewalk, and the sea behind the houses on the left.
 - **Beach town obstacles.** Sand drifts drag the ride down to 60% speed while it is in them and cost no life. Surfers wait at the curb and carry a board across the street when you get close. Golf carts putter up the street, drifting from one lane to the other. Surfers and carts hurt every ride. No dogs at the beach, and few cars backing out.
 - **A fuller suburb.** Three house shapes (a dormer, two storeys, a side garage), six wall colours, shutters, window boxes on houses that ordered, round, pine and blossom trees, picket fences, street lamps, flamingos, paddling pools and bird baths. Some traffic is now pickup trucks.
+- **Evening shifts.** Friday, Saturday and Sunday (and the bonus round) are played at dusk: warm low light, lights on in the houses that ordered, glowing street lamps, and light on the road ahead of the ride. The Payton Pizza van's sign throws a wide orange pool around it. The rules are the same as by day.
+- **Finished rides.** The hoverboard has fenders, foot pads and rings of light on its wheels; the dirt bike a number plate, engine and exhaust; the Bimmer a grille, hood creases, skirts and twin tailpipes; the van cream bands, door lines and a cream roof panel. The garage shows a picture of each real 3D ride.
+- **A fuller shop** at the end of the street: a wide window, plants by the door, a flue and an air conditioner on the roof.
+- **Low effects**, in the pause menu, for slower phones: no shadows, no evening glows, a softer picture. The choice is remembered on the device.
 - 8 more unit tests (93 in all) for neighborhoods and the beach obstacles.
 
 ### Changed
+- **The camera sits a little lower** (57 degrees down, was 62), at Cam's ask, so more of the house fronts shows. It still never turns.
 - The aiming ring now works out where a pacing customer will be when the pizza arrives, so it lights for them more often and still never promises a delivery that misses.
 - Each street's houses are built when the street starts and thrown away when the next one does, so memory does not grow as the weeks go by.
 - The recorded test streets were re-recorded (`npm run record`): day 14 is now a beach town street.

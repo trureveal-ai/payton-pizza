@@ -28,6 +28,7 @@ export function nextShift(){
 }
 function begin(bonus){
   G.bonus=bonus;G.ride=G.opt.ride!=null?G.opt.ride:save.ride;G.V=VEH[G.ride];G.T=tune(G.day);G.hood=hoodOf(G.day);
+  G.dusk=(G.day-1)%7>=4;   // Friday, Saturday and Sunday are evening shifts: a change of light, not of rules
   // the same day always gets the same street and the same traffic
   seed((G.runSeed!=null?G.runSeed+(G.day-G.day0):shiftSeed(G.day))+(bonus?7777:0));G.step=0;
   var orders=bonus?buildBonus(G.day):buildShift(G.day);
@@ -325,7 +326,7 @@ export function resolvePie(p){
   return false;
 }
 
-export function toTitle(){G.state='title';G.bonus=false;G.day=3;G.T=tune(3);G.hood=hoodOf(3);seed(shiftSeed(3));buildShift(3);G.cam=0;}
+export function toTitle(){G.state='title';G.bonus=false;G.day=3;G.T=tune(3);G.hood=hoodOf(3);G.dusk=false;seed(shiftSeed(3));buildShift(3);G.cam=0;}
 
 // Where a pizza thrown right now to one side would land, and what it would hit.
 // The 3D view draws this as an aiming mark, so throwing is about position, not guesswork.

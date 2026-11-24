@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { H, RDL, RDR, SWL, SWR, UNIT, W, WALL_L, WALL_R } from './config.js';
 import { G, P } from './state.js';
+import { save } from './save.js';
 import { glc, view } from './canvas.js';
 import { aimAt } from './game.js';
 import { vrnd } from './util.js';
@@ -19,7 +20,11 @@ var THEMES = {
     walls: ['#ffd9c2', '#c9f0ea', '#fff3b8', '#d7e3ff', '#ffd1e1', '#ffffff'], dull: ['#e3ddd0', '#d6dde0', '#e0d6cc'], porch: '#c9a36b' }
 };
 var theme = THEMES.suburb, themeKey = '';
-var PITCH = 62 * Math.PI / 180, VFOV = 60, HALF_W = 11.8, BOTTOM = -0.6;
+// Evening shifts: a warm low light, lit windows in houses that ordered, glowing street lamps, and light
+// on the road ahead of the ride (the van's sign lights the street orange).
+var DUSK = { suburb: '#f6b98e', beach: '#ffb98f' }, glowMat = null, lampGlows = [], beam = null;
+// 57 degrees down: a little lower than the 62 of v0.2.0, at Cam's ask, to show more of the house fronts.
+var PITCH = 57 * Math.PI / 180, VFOV = 60, HALF_W = 11.8, BOTTOM = -0.6;
 
 var renderer = null, scene, camera, toon, sun, hemi, ground, dashes, world, grassMat, roadMat, walkMat, ocean;
 var cam = { D: 38, h: 33, g: 18, foot: 1, far: 60, ahead: 55 };
@@ -96,16 +101,48 @@ export function init3d() {
     ring.rotation.x = -Math.PI / 2; ring.renderOrder = 5; ring.visible = false; scene.add(ring); aims.push(ring);
   }
 
+  glowMat = new THREE.SpriteMaterial({ map: M.glowTexture(), color: '#ffe2a0', blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: 0.8 });
+  var bg = new THREE.PlaneGeometry(1, 1); bg.rotateX(-Math.PI / 2);
+  beam = new THREE.Mesh(bg, new THREE.MeshBasicMaterial({ map: M.glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+  beam.visible = false; beam.renderOrder = 3; scene.add(beam);
   buildPlayer();
   buildFinish();
+  G.setEffects = setEffects; setEffects(!!save.low);
   view.onResize = resize3d; resize3d();
   G.project = project;
   return true;
 }
 
+// Low effects, for slower phones: no shadows, no evening glows, and a softer picture.
+function setEffects(low) {
+  G.low = !!low;
+  var on = !G.low && G.opt.shadows !== 0;
+  renderer.shadowMap.enabled = on; sun.castShadow = on;
+  scene.traverse(function (m) { if (m.material) m.material.needsUpdate = true; });
+  themeKey = ''; resize3d();
+}
+// A picture of each ride for the garage, taken with the same models the street uses.
+function makeRidePics() {
+  var pics = [], sc = new THREE.Scene(), u = player.userData, i;
+  sc.background = new THREE.Color('#44464f');
+  sc.add(new THREE.HemisphereLight('#ffffff', '#8a8f9c', 1.7));
+  var d = new THREE.DirectionalLight('#fff3d0', 2.6); d.position.set(-3, 6, -2); sc.add(d);
+  var pc = new THREE.PerspectiveCamera(32, 112 / 122, 0.1, 60);
+  renderer.setPixelRatio(1); renderer.setSize(224, 244, false);
+  for (i = 0; i < 4; i++) {
+    var r = u.rides[i], was = r.visible, far = [6.8, 7.4, 6.6, 9.4][i], mid = [1.4, 1.5, 0.6, 1.6][i];
+    sc.add(r); r.visible = true; r.rotation.set(0, 0, 0); r.position.set(0, 0, 0);
+    pc.position.set(-far * 0.6, far * 0.5 + mid, -far * 0.66); pc.lookAt(0, mid, 0);
+    renderer.render(sc, pc);
+    var c = document.createElement('canvas'); c.width = 224; c.height = 244; c.getContext('2d').drawImage(glc, 0, 0); pics.push(c);
+    player.add(r); r.visible = was;
+  }
+  resize3d(); renderer.render(scene, camera);
+  G.ridePics = pics;
+}
 function resize3d() {
   if (!renderer) return;
-  renderer.setPixelRatio(view.dpr);
+  renderer.setPixelRatio(G.low ? Math.min(view.dpr, 1.25) : view.dpr);
   renderer.setSize(view.cw, view.ch, false);
   var asp = view.cw / view.ch, half = VFOV / 2 * Math.PI / 180;
   camera.aspect = asp; camera.fov = VFOV; camera.updateProjectionMatrix();
@@ -187,10 +224,13 @@ function buildFinish() {
 // ---------- the street: one object per house, customer and order badge ----------
 // the colours and scenery of the neighborhood this street is in
 function applyTheme() {
-  var key = G.hood ? G.hood.key : 'suburb';
+  var hood = G.hood ? G.hood.key : 'suburb', dusk = !!G.dusk, key = hood + (dusk ? '|dusk' : '') + (G.low ? '|low' : '');
   if (key === themeKey) return;
-  themeKey = key; theme = THEMES[key] || THEMES.suburb;
-  scene.background.set(theme.haze); scene.fog.color.set(theme.haze); hemi.groundColor.set(theme.under);
+  themeKey = key; theme = THEMES[hood] || THEMES.suburb;
+  var sky = dusk ? DUSK[hood] || DUSK.suburb : theme.haze;
+  scene.background.set(sky); scene.fog.color.set(sky); hemi.groundColor.set(theme.under);
+  hemi.color.set(dusk ? '#ffd2b8' : '#ffffff'); hemi.intensity = dusk ? 1.05 : 1.5;
+  sun.color.set(dusk ? '#ff9a5c' : '#fff3d0'); sun.intensity = dusk ? 2.3 : 2.9;
   grassMat.color.set(theme.grass); roadMat.color.set(theme.road); walkMat.color.set(theme.walk); dashes.material.color.set(theme.dash);
   ocean.visible = theme.ocean;
 }
@@ -202,7 +242,8 @@ function rebuildStreet() {
   // nearly every house is its own shape, so last street's are thrown away; yards come in a few layouts and are kept
   for (i = 0; i < houseGeos.length; i++) houseGeos[i].dispose();
   houseGeos = []; lotObjs = []; obsMap.clear();
-  var beach = themeKey === 'beach', made = {};
+  var beach = theme === THEMES.beach, hoodKey = beach ? 'beach' : 'suburb', dusk = !!G.dusk, made = {};
+  lampGlows = [];
   for (i = 0; i < G.lots.length; i++) {
     var l = G.lots[i], left = l.side < 0, o = { l: l, house: null, yard: null, person: null, arms: null, box: null, marker: null, wins: [] };
     // what a lot looks like is read off numbers the street builder already made, so it is the same for every player
@@ -210,17 +251,24 @@ function rebuildStreet() {
     var ho = { slot: l.slot, cust: l.cust, variant: f(5, 3), roof: l.roof[0], roof2: l.roof[1],
       wall: l.cust ? theme.walls[f(7, theme.walls.length)] : theme.dull[f(7, theme.dull.length)],
       door: l.cust ? (beach ? '#1f9bb3' : '#c2262c') : '#5a4634', porch: l.cust ? theme.porch : '#9d9d97', mat: l.cust ? '#ffd23f' : '#8b8b86' };
-    var yo = { hood: themeKey, cust: l.cust, tree: beach ? (f(3.7, 3) ? 1 : 0) : f(3.7, 4), fence: !beach && f(11, 3) === 0, lamp: (pair + (left ? 0 : 2)) % 4 === 0, prop: f(13, 5) };
+    var yo = { hood: hoodKey, cust: l.cust, tree: beach ? (f(3.7, 3) ? 1 : 0) : f(3.7, 4), fence: !beach && f(11, 3) === 0, lamp: (pair + (left ? 0 : 2)) % 4 === 0, prop: f(13, 5) };
     if (yo.prop > 3) yo.prop = 0;
-    var hk = [themeKey, ho.roof, ho.cust, ho.slot, ho.variant, ho.wall].join('|'), hg = made[hk];
-    if (!hg) { hg = made[hk] = beach ? M.beachHouseGeo(ho) : M.houseGeo(ho); houseGeos.push(hg); }
+    var hk = [ho.roof, ho.cust, ho.slot, ho.variant, ho.wall].join('|'), hg = made[hk];
+    if (!hg) {
+      M.panes(dusk ? (l.cust ? '#ffe08a' : '#4f5d7a') : null);   // in the evening the houses that ordered have their lights on
+      hg = made[hk] = beach ? M.beachHouseGeo(ho) : M.houseGeo(ho); houseGeos.push(hg);
+    }
     o.house = mesh(hg);
     o.house.receiveShadow = true;
     o.house.position.set(X(left ? WALL_L : WALL_R), 0, Z(l.y0 + 105));
-    o.yard = mesh(cached(['y', themeKey, yo.cust && !yo.tree ? 1 : 0, yo.tree, yo.fence, yo.lamp, yo.prop].join('|'), function () { return M.yardGeo(yo); }));
+    o.yard = mesh(cached(['y', hoodKey, yo.cust && !yo.tree ? 1 : 0, yo.tree, yo.fence, yo.lamp, yo.prop].join('|'), function () { return M.yardGeo(yo); }));
     o.yard.position.copy(o.house.position);
     if (!left) { o.house.scale.x = -1; o.yard.scale.x = -1; }
     world.add(o.house, o.yard);
+    if (dusk && !G.low && yo.lamp) {
+      var gl = new THREE.Sprite(glowMat); gl.scale.setScalar(3.4); gl.position.set(o.house.position.x + (left ? 2.2 : -2.2), 3.3, o.house.position.z - 5.0);
+      world.add(gl); lampGlows.push({ s: gl, y0: l.y0 });
+    }
     if (l.cust) {
       var c = l.c, pk = 'p|' + c.shirt + c.skin + c.hair;
       o.person = new THREE.Group();
@@ -343,7 +391,7 @@ function syncObs() {
 function syncPlayer(t, dt) {
   var u = player.userData, show = (G.state === 'play' || G.state === 'pause') && !(G.inv > 0 && Math.floor(G.inv * 14) % 2 === 0);
   player.visible = show;
-  if (!show) { u.px = P.x; return; }
+  if (!show) { u.px = P.x; beam.visible = false; return; }
   var py = G.cam + H - P.sy, vx = dt > 0 ? (P.x - u.px) / dt : 0; u.px = P.x;
   u.lean += (Math.max(-0.3, Math.min(0.3, -vx * 0.0016)) - u.lean) * Math.min(1, dt * 10);
   player.position.set(X(P.x), 0, Z(py));
@@ -363,6 +411,13 @@ function syncPlayer(t, dt) {
       for (var k = 0; k < 15; k++) d.bulbs.setColorAt(k, (k + u.bulbStep) % 3 === 0 ? BULB_ON : BULB_OFF);
       d.bulbs.instanceColor.needsUpdate = true;
     }
+  }
+  // evening: light on the road ahead of the ride; the van's sign throws a wide orange pool around it
+  beam.visible = show && !!G.dusk && !G.low;
+  if (beam.visible) {
+    var van = G.ride === 3;
+    beam.material.color.set(van ? '#ff9a3c' : '#fff1c4'); beam.material.opacity = van ? 0.5 + 0.08 * Math.sin(t * 5) : 0.38;
+    beam.scale.set(van ? 9 : 4.2, 1, van ? 11 : 7.5); beam.position.set(X(P.x), 0.06, Z(py) - (van ? 1.5 : 4.2));
   }
   u.spot.visible = G.shieldLeft <= 0 && G.ride < 2;
   if (u.spot.visible) u.spot.scale.setScalar(1.25);
@@ -408,7 +463,8 @@ function placeSun(cz) {
 
 var lastT = 0;
 export function draw3d() {
-  if (!renderer || G.state === 'garage') return;
+  if (!renderer) return;
+  if (G.state === 'garage') { if (!G.ridePics) makeRidePics(); return; }
   var t = G.tGame, dt = Math.max(0, Math.min(0.1, t - lastT)); lastT = t;
   if (G.lots !== lotsRef) rebuildStreet();
   syncLots(t); syncObs(); syncPlayer(t, dt); syncThrown(t);
