@@ -56,6 +56,12 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **More rides in the garage:** after the neighborhoods, in Phase 6. Cam asked for suggestions; which rides and how many is his choice at the start of that phase (issues #64, #71).
 - **Phases:** these two additions make thirteen phases (0 to 12). Characters and polish, music, personal bests and the boards each move two phases later; v1.0.0 is Phase 12.
 
+## Decisions (2026-11-23, late: Phase 4 review)
+
+- **Beach town:** Cam likes it.
+- **Camera:** a little lower, for a little more detail. Now 57 degrees down (was 62).
+- **Roadwork barriers:** they make it more challenging; they stay for now.
+
 ## The 2D version
 
 The 2D game is kept in case it is wanted later:

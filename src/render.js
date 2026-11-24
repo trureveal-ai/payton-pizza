@@ -107,7 +107,7 @@ export function drawHUD(){
 export function drawBanner(){
   var a=clamp(G.bannerT,0,1);ctx.globalAlpha=a;
   R(0,268,W,G.bonus?156:180,'rgba(15,16,22,0.82)');
-  T('WEEK '+weekOf(G.day)+'  -  '+G.hood.name,W/2,290,13,'#9cf07a','center');
+  T('WEEK '+weekOf(G.day)+'  -  '+G.hood.name+(G.dusk?'  -  EVENING':''),W/2,290,13,'#9cf07a','center');
   if(G.bonus){
     T('PIZZA PARTY!',W/2,328,34,'#ffd23f','center','#000');
     T('BONUS ROUND  -  EVERY HOUSE ORDERED',W/2,366,14,'#fff','center');
@@ -295,7 +295,8 @@ export function drawGarage(){
     if(sel){ctx.strokeStyle='#ffd23f';ctx.lineWidth=3;ctx.strokeRect(15.5,cy+1.5,W-31,143);}
     RR(26,cy+12,112,122,8,'#44464f');
     ctx.fillStyle='#f5d547';ctx.fillRect(80,cy+18,3,22);ctx.fillRect(80,cy+64,3,22);ctx.fillRect(80,cy+108,3,20);
-    ctx.save();ctx.translate(82,cy+73);ctx.scale(1.7,1.7);drawVeh(i,0,0,0,1,G.tGame);ctx.restore();
+    if(G.ridePics)ctx.drawImage(G.ridePics[i],26,cy+12,112,122);   // a picture of the real 3D ride
+    else{ctx.save();ctx.translate(82,cy+73);ctx.scale(1.7,1.7);drawVeh(i,0,0,0,1,G.tGame);ctx.restore();}
     T(v.name,152,cy+24,18,'#fff');
     T(v.blurb[0],152,cy+44,12,'#cfd6e3');T(v.blurb[1],152,cy+58,12,'#cfd6e3');
     T(v.perkText[0],152,cy+74,12,'#5ad1ff');T(v.perkText[1],152,cy+88,12,'#5ad1ff');
@@ -315,6 +316,8 @@ export function drawPause(){
   T('PAUSED',W/2,300,48,'#ffd23f','center','#000');
   btn(90,370,300,62,'RESUME',function(){G.state='play';},{primary:true,size:24,key:'Enter'});
   btn(90,448,300,52,'QUIT TO TITLE',function(){writeSave();toTitle();},{});
+  // for slower phones: no shadows, no evening glows, a softer picture
+  btn(90,516,300,46,'EFFECTS: '+(save.low?'LOW':'FULL'),function(){save.low=!save.low;writeSave();sfx('ui');if(G.setEffects)G.setEffects(save.low);},{size:15,key:'KeyE'});
 }
 
 export function frameDraw(){

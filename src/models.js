@@ -67,6 +67,8 @@ export function bx(w, h, d) { return new THREE.BoxGeometry(w, h, d); }          
 export function blob(r) { return new THREE.IcosahedronGeometry(r, 0); }          // a rough ball: 20 triangles
 function cone(r, h, seg) { return new THREE.ConeGeometry(r, h, seg || 8); }
 var WHITE = '#ffffff', PANE = '#9ad8ff';
+// the colour of window glass for the houses built next: sky blue by day, lit or dark in the evening
+export function panes(color) { PANE = color || '#9ad8ff'; }
 
 // what every house front has: door, porch, mat, walkway, mailbox, and a window in the other two slots
 function frontParts(p, o, deck) {
@@ -323,7 +325,13 @@ export function hoverGeo() {
     part(cyl(0.3, 0.26, 12), '#111318', [-0.72, 0.3, 0], [0, 0, HALF]), part(cyl(0.3, 0.26, 12), '#111318', [0.72, 0.3, 0], [0, 0, HALF]),
     part(cyl(0.14, 0.28, 10), '#cfd5e0', [-0.72, 0.3, 0], [0, 0, HALF]), part(cyl(0.14, 0.28, 10), '#cfd5e0', [0.72, 0.3, 0], [0, 0, HALF]),
     part(box(0.42, 0.05, 0.1, 0.02), '#4de1ff', [-0.3, 0.26, 0.24]), part(box(0.42, 0.05, 0.1, 0.02), '#4de1ff', [0.3, 0.26, 0.24]),
-    part(box(0.42, 0.05, 0.1, 0.02), '#4de1ff', [-0.3, 0.26, -0.24]), part(box(0.42, 0.05, 0.1, 0.02), '#4de1ff', [0.3, 0.26, -0.24])
+    part(box(0.42, 0.05, 0.1, 0.02), '#4de1ff', [-0.3, 0.26, -0.24]), part(box(0.42, 0.05, 0.1, 0.02), '#4de1ff', [0.3, 0.26, -0.24]),
+    // foot pads, fenders, a ring of light on each wheel, the hinge in the middle
+    part(bx(0.44, 0.03, 0.36), '#4a505c', [-0.3, 0.385, 0]), part(bx(0.44, 0.03, 0.36), '#4a505c', [0.3, 0.385, 0]),
+    part(box(0.34, 0.1, 0.5, 0.05), RED, [-0.72, 0.64, 0]), part(box(0.34, 0.1, 0.5, 0.05), RED, [0.72, 0.64, 0]),
+    part(cyl(0.33, 0.04, 14), '#4de1ff', [-0.87, 0.3, 0], [0, 0, HALF]), part(cyl(0.33, 0.04, 14), '#4de1ff', [0.87, 0.3, 0], [0, 0, HALF]),
+    part(cyl(0.2, 0.05, 10), '#111318', [-0.88, 0.3, 0], [0, 0, HALF]), part(cyl(0.2, 0.05, 10), '#111318', [0.88, 0.3, 0], [0, 0, HALF]),
+    part(cyl(0.1, 0.5, 8), '#59616d', [0, 0.3, 0], [HALF, 0, 0])
   ]);
 }
 export function bikeGeo() {
@@ -333,7 +341,13 @@ export function bikeGeo() {
     part(box(0.3, 0.42, 1.3, 0.12), '#ff7b00', [0, 0.72, 0]), part(box(0.28, 0.16, 0.56, 0.06), '#1c1f27', [0, 0.98, 0.26]),
     part(box(0.22, 0.2, 0.5, 0.06), '#ffffff', [0, 0.86, -0.62], [0.4, 0, 0]), part(box(0.1, 0.5, 0.1, 0.03), '#3a3f4a', [0, 0.82, -0.62], [0.35, 0, 0]),
     part(box(0.9, 0.07, 0.08, 0.03), '#3a3f4a', [0, 1.12, -0.5]), part(box(0.12, 0.1, 0.12, 0.03), '#111318', [-0.46, 1.12, -0.5]), part(box(0.12, 0.1, 0.12, 0.03), '#111318', [0.46, 1.12, -0.5]),
-    part(box(0.2, 0.12, 0.5, 0.05), '#ff7b00', [0, 0.84, 0.8], [-0.3, 0, 0])
+    part(box(0.2, 0.12, 0.5, 0.05), '#ff7b00', [0, 0.84, 0.8], [-0.3, 0, 0]),
+    // front fender, number plate, engine, exhaust, swingarm
+    part(box(0.2, 0.06, 0.62, 0.03), '#ff7b00', [0, 0.8, -0.8], [0.25, 0, 0]),
+    part(bx(0.36, 0.3, 0.04), '#ffffff', [0, 1.0, -0.76]), part(bx(0.14, 0.18, 0.05), '#111318', [0, 1.0, -0.765]),
+    part(box(0.34, 0.3, 0.42, 0.05), '#59616d', [0, 0.5, 0.05]),
+    part(cyl(0.07, 0.9, 8), '#cfd5e0', [0.2, 0.56, 0.45], [HALF, 0, 0]), part(cyl(0.1, 0.24, 8), '#3a3f4a', [0.2, 0.58, 0.98], [HALF, 0, 0]),
+    part(bx(0.07, 0.08, 0.72), '#3a3f4a', [-0.15, 0.42, 0.42]), part(bx(0.07, 0.08, 0.72), '#3a3f4a', [0.15, 0.42, 0.42])
   ]);
 }
 // The Gun-Metal Black Bimmer: a low dark sedan, no badge or logo anywhere.
@@ -347,7 +361,14 @@ export function bimmerGeo() {
     part(box(1.42, 0.16, 0.2, 0.06), '#1b1e24', [0, 0.36, -1.3]), part(box(1.42, 0.16, 0.2, 0.06), '#1b1e24', [0, 0.36, 1.3]),
     part(box(0.34, 0.11, 0.07, 0.03), '#f4fbff', [-0.44, 0.58, -1.34]), part(box(0.34, 0.11, 0.07, 0.03), '#f4fbff', [0.44, 0.58, -1.34]),
     part(box(0.4, 0.1, 0.07, 0.03), '#ff2e43', [-0.42, 0.6, 1.34]), part(box(0.4, 0.1, 0.07, 0.03), '#ff2e43', [0.42, 0.6, 1.34]),
-    part(box(0.1, 0.1, 0.16, 0.03), '#2f343c', [-0.76, 0.84, -0.3]), part(box(0.1, 0.1, 0.16, 0.03), '#2f343c', [0.76, 0.84, -0.3])
+    part(box(0.1, 0.1, 0.16, 0.03), '#2f343c', [-0.76, 0.84, -0.3]), part(box(0.1, 0.1, 0.16, 0.03), '#2f343c', [0.76, 0.84, -0.3]),
+    // a wide grille under a bright strip, creases on the hood, a lip on the trunk, skirts, twin tailpipes
+    part(box(0.72, 0.14, 0.06, 0.03), '#0d0e12', [0, 0.5, -1.36]), part(bx(0.76, 0.02, 0.07), '#aab2bd', [0, 0.585, -1.36]),
+    part(bx(0.03, 0.02, 0.9), '#59616d', [-0.32, 0.775, -0.82]), part(bx(0.03, 0.02, 0.9), '#59616d', [0.32, 0.775, -0.82]),
+    part(box(1.2, 0.05, 0.16, 0.02), '#1b1e24', [0, 0.8, 1.24]),
+    part(bx(0.06, 0.1, 1.9), '#1b1e24', [-0.71, 0.3, 0]), part(bx(0.06, 0.1, 1.9), '#1b1e24', [0.71, 0.3, 0]),
+    part(cyl(0.06, 0.12, 8), '#aab2bd', [-0.4, 0.28, 1.4], [HALF, 0, 0]), part(cyl(0.06, 0.12, 8), '#aab2bd', [0.4, 0.28, 1.4], [HALF, 0, 0]),
+    part(bx(1.18, 0.4, 0.05), '#2f343c', [0, 0.92, 0.2])
   ];
   for (var a = -1; a <= 1; a += 2) for (var b = -1; b <= 1; b += 2) {
     p.push(part(cyl(0.3, 0.26, 14), '#15171c', [a * 0.64, 0.3, b * 0.86], [0, 0, HALF]));
@@ -370,11 +391,17 @@ export function vanGeo() {
     part(box(0.24, 0.42, 0.1, 0.05), '#ff8a1e', [-0.74, 1.12, 1.87]), part(box(0.24, 0.42, 0.1, 0.05), '#ff8a1e', [0.74, 1.12, 1.87]),
     part(box(0.56, 0.22, 0.05, 0.02), '#f4f6fa', [0, 0.82, 1.9]),
     part(box(0.16, 0.26, 0.12, 0.04), DARK, [-1.03, 1.52, -1.4]), part(box(0.16, 0.26, 0.12, 0.04), DARK, [1.03, 1.52, -1.4]),
-    part(box(1.0, 0.12, 0.56, 0.05), DARK, [0, 2.31, 0.55]), part(cyl(0.07, 0.5, 8), DARK, [0, 2.58, 0.55])
+    part(box(1.0, 0.12, 0.56, 0.05), DARK, [0, 2.31, 0.55]), part(cyl(0.07, 0.5, 8), DARK, [0, 2.58, 0.55]),
+    // a cream band across the nose and along the top of each side, door lines, a cream roof panel
+    part(bx(1.84, 0.12, 0.06), CREAM, [0, 1.13, -1.61]),
+    part(bx(0.03, 0.1, 2.2), CREAM, [-0.94, 2.06, 0.7]), part(bx(0.03, 0.1, 2.2), CREAM, [0.94, 2.06, 0.7]),
+    part(bx(0.03, 1.0, 0.03), '#a3101c', [-0.955, 1.3, -0.25]), part(bx(0.03, 1.0, 0.03), '#a3101c', [0.955, 1.3, -0.25]),
+    part(box(1.5, 0.05, 1.9, 0.02), CREAM, [0, 2.285, 0.72]), part(bx(0.03, 1.1, 0.02), '#a3101c', [0, 1.5, 1.86])
   ];
   for (var a = -1; a <= 1; a += 2) for (var b = -1; b <= 1; b += 2) {
     p.push(part(cyl(0.44, 0.36, 16), '#20222a', [a * 0.86, 0.44, b * 1.15], [0, 0, HALF]));
     p.push(part(cyl(0.24, 0.38, 12), '#cfd5e0', [a * 0.86, 0.44, b * 1.15], [0, 0, HALF]));
+    p.push(part(cyl(0.1, 0.4, 8), RED, [a * 0.86, 0.44, b * 1.15], [0, 0, HALF]));
   }
   return merge(p);
 }
@@ -384,6 +411,11 @@ export function shopGeo() {
   var p = [part(box(5.6, 4.2, 7.4, 0.2), '#b3001b', [0, 2.1, 0]), part(box(6.0, 0.4, 7.8, 0.1), '#7d0013', [0, 4.3, 0]),
     part(box(0.2, 2.4, 1.4, 0.04), '#3d6ea8', [-2.82, 1.3, -1.6]), part(box(0.2, 2.2, 1.2, 0.04), '#fff8e7', [-2.82, 1.1, 1.4])];
   for (var i = 0; i < 6; i++) p.push(part(box(1.2, 0.14, 1.2, 0.03), i % 2 ? '#ffffff' : '#d7263d', [-3.3, 3.0, -3.0 + i * 1.2], [0, 0, 0.5]));
+  // a wide shop window with a cream frame, plants by the door, a flue and an air conditioner on the roof
+  p.push(part(bx(0.16, 2.6, 3.4), '#fff8e7', [-2.8, 1.4, -1.6])); p.push(part(bx(0.2, 2.2, 3.0), '#3d6ea8', [-2.82, 1.4, -1.6])); p.push(part(bx(0.22, 2.2, 0.08), '#fff8e7', [-2.83, 1.4, -1.6]));
+  p.push(part(bx(0.22, 0.5, 1.0), '#3d6ea8', [-2.83, 1.75, 1.4])); p.push(part(blob(0.08), '#ffd23f', [-2.95, 1.05, 1.0]));
+  for (i = -1; i <= 1; i += 2) { p.push(part(cyl(0.26, 0.42, 8), '#c58d4e', [-3.15, 0.21, 1.4 + i * 1.0])); p.push(part(blob(0.42), '#35b84e', [-3.15, 0.78, 1.4 + i * 1.0])); }
+  p.push(part(box(0.8, 1.3, 0.8, 0.06), '#fff8e7', [1.8, 5.1, -2.6])); p.push(part(bx(0.9, 0.16, 0.9), '#d7263d', [1.8, 5.5, -2.6])); p.push(part(box(1.1, 0.5, 0.9, 0.06), '#d9dde4', [1.6, 4.75, 2.6]));
   return merge(p);
 }
 
