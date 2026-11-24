@@ -1,6 +1,6 @@
 # Roadmap
 
-Payton Pizza is built in eleven phases (0 to 10). Each phase ships as a version with a git tag, a GitHub Release, a CHANGELOG entry and a GitHub milestone, and the next phase starts only after its gate passes. The full plan is in the [build plan doc](https://claude.ai/artifact/QdqqfSduUsuQ2hvMBt4WAs).
+Payton Pizza is built in thirteen phases (0 to 12). Each phase ships as a version with a git tag, a GitHub Release, a CHANGELOG entry and a GitHub milestone, and the next phase starts only after its gate passes. The full plan is in the [build plan doc](https://claude.ai/artifact/QdqqfSduUsuQ2hvMBt4WAs).
 
 The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with Three.js. The 2D version is kept (see "The 2D version" below).
 
@@ -10,13 +10,15 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | CI passes, release published, beta plays like the prototype on phone and PC | Beta | Released 2026-11-22; Cam played it on his phone 2026-11-23 |
 | v0.2.0 | 2 | 3D core and controls: seeded streets, a 3D street in simple shapes, one fixed camera, wider street and view, forgiving tap-to-throw, front-door deliveries made reachable, the Bimmer | Replays are deterministic; smooth on Cam's phone; Cam approves the camera, the street width and the controls | Beta | Released 2026-11-23 after Cam's review on his iPhone |
 | v0.3.0 | 3 | Deeper gameplay: lives made clearer with Continue and extra-life pickups, ride perks, new customers, bonus round, more hazards, tuning | Cam approves the difficulty after a full week of shifts, and each ride feels worth its price | Beta | Released 2026-11-23; Cam played it on beta and approved the difficulty, the dogs and the bonus round |
-| v0.4.0 | 4 | 3D world and rides: finished look for the street, houses, props, traffic and all four rides; day and dusk | Smooth on Cam's phone on the busiest street; Cam approves the look | Beta | Planned |
-| v0.5.0 | 5 | Characters and polish: Payton, customers, effects, menus, tutorial, settings | Cam approves the characters and the menus | Beta | Planned |
-| v0.6.0 | 6 | Music and sound | Cam approves the sound on his phone | Beta | Planned |
-| v0.7.0 | 7 | Personal bests and install on phone | Installed, played offline, old saves intact | Beta | Planned |
-| v0.8.0 | 8 | Shared leaderboard | Two devices see each other's scores; fake scores refused | Beta | Planned |
-| v0.9.0 | 9 | Invitation group leaderboards | A second person joins from a link and both scores show | Beta | Planned |
-| v1.0.0 | 10 | First live release | Smoke test passes on phone and PC; Cam gives the go-ahead | Live | Planned |
+| v0.4.0 | 4 | Suburb, rides and the beach town: finished look for today's suburb, its props, traffic and shop, and all four rides; neighborhoods that change by week on a four-week cycle; the beach town with its own obstacles; day and dusk | Smooth on Cam's phone in both neighborhoods; Cam approves the look, and the beach town's obstacles feel fair | Beta | Planned |
+| v0.5.0 | 5 | Downtown and the snowy mountain town, each with its own look and obstacles; difficulty check across the four weeks | Cam approves both neighborhoods and the frame rate holds | Beta | Planned |
+| v0.6.0 | 6 | New rides in the garage, chosen by Cam at the start of the phase | Cam approves the list and each new ride feels worth its price | Beta | Planned |
+| v0.7.0 | 7 | Characters and polish: Payton, customers, effects, menus, tutorial, settings | Cam approves the characters and the menus | Beta | Planned |
+| v0.8.0 | 8 | Music and sound | Cam approves the sound on his phone | Beta | Planned |
+| v0.9.0 | 9 | Personal bests and install on phone | Installed, played offline, old saves intact | Beta | Planned |
+| v0.10.0 | 10 | Shared leaderboard | Two devices see each other's scores; fake scores refused | Beta | Planned |
+| v0.11.0 | 11 | Invitation group leaderboards | A second person joins from a link and both scores show | Beta | Planned |
+| v1.0.0 | 12 | First live release | Smoke test passes on phone and PC; Cam gives the go-ahead | Live | Planned |
 
 ## Decisions (2026-11-22)
 
@@ -28,7 +30,7 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **Camera:** one fixed view. Steep like a top-down view, tilted enough to show front doors, and it never turns. Wide enough to watch a pizza land.
 - **Street:** wider than the 3D test page.
 - **The black car:** "Gun-Metal Black Bimmer", no badge or logo (arrives in v0.2.0).
-- **Leaderboard service:** Cloudflare Workers with D1, chosen in Phase 0. The live proof of it runs at the start of Phase 8 (Cam's OK, 2026-11-22).
+- **Leaderboard service:** Cloudflare Workers with D1, chosen in Phase 0. The live proof of it runs at the start of the shared-leaderboard phase, now Phase 10 (Cam's OK, 2026-11-22).
 - **Names on boards:** three-letter initials. No accounts, emails, ads or tracking.
 - **Pages deploy:** the `gh-pages` branch, written only by workflows.
 
@@ -38,7 +40,7 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **Lives:** made clearer on screen. They already carry between shifts. Extra-life pickups are added to the street.
 - **Continue:** when a run ends, the player can continue from the start of the day they reached. The score resets to zero on a continue so the leaderboards stay fair. Bank and rides are kept.
 - **Ride perks, each ride keeping the ones below it:** hoverboard none; dirt bike rides over potholes; Gun-Metal Black Bimmer also knocks cones and trash cans aside (and, added in Phase 3, balls); Payton Pizza van also shrugs off dogs and skaters. Traffic and cars backing out hurt every ride.
-- **Phases:** the gameplay work is split in two (Phases 2 and 3), which makes eleven phases.
+- **Phases:** the gameplay work is split in two (Phases 2 and 3), which made eleven phases at the time (thirteen since the evening of 2026-11-23).
 
 ## Decisions (2026-11-23, from Cam's playtest of the Phase 3 beta)
 
@@ -48,10 +50,11 @@ The game is going 3D. v0.1.0 is the 2D game; from v0.2.0 it is drawn in 3D with 
 - **Difficulty:** Wednesday to Sunday is "just right"; Sunday is left alone. The balls stay as they are.
 - **Bonus round:** he likes that it is brief, all timing, with few obstacles and a chance at maximum points and dollars. Kept as built.
 
-## Asked for, not yet scheduled (2026-11-23)
+## Decisions (2026-11-23, evening: neighborhoods and rides)
 
-- **More rides in the garage.** Cam wants the garage to grow beyond the four rides. Proposed for Phase 4, where every ride gets its finished model (issue #64).
-- **Neighborhoods that look different from week to week.** Proposed for Phase 4, where the street's finished look is built, so each week's look is designed in from the start (issue #65).
+- **Neighborhoods ("worlds"):** four, one per week, then the cycle repeats while the difficulty keeps climbing: suburb, beach town, downtown, snowy mountain town. Each has its own look and its own obstacles. The suburb and the beach town are Phase 4; downtown and the snowy town are Phase 5 (issues #65, #67, #68, #69, #70).
+- **More rides in the garage:** after the neighborhoods, in Phase 6. Cam asked for suggestions; which rides and how many is his choice at the start of that phase (issues #64, #71).
+- **Phases:** these two additions make thirteen phases (0 to 12). Characters and polish, music, personal bests and the boards each move two phases later; v1.0.0 is Phase 12.
 
 ## The 2D version
 
@@ -65,4 +68,4 @@ The 2D game is kept in case it is wanted later:
 - **From Phase 3:** every number that changes with the day is in `src/tuning.js`, and `npm run measure` shows what a change does. The automatic player steers worse than a person, so its results show direction only. A pizza in flight marks its house as taken, which is why an aiming ring goes out after a throw. The garage's ride pictures are still 2D (Phase 4).
 - **From Phase 2:** the street kept the 2D game's sizes (8 m road), which is a third wider than the 3D test page, and Cam approved the width. On his iPhone the game averaged 60 frames a second with one-second lows of 46 to 49. Aiming rings promise slightly less than the rules allow, so a lit ring always delivers. The recorded test streets must be re-recorded (`npm run record`) whenever a rule changes on purpose, which Phase 3 did.
 - **From the 3D test (branch `spike-3d`, page at `/payton-pizza/spike-3d/`):** one merged mesh per house and instanced props kept the scene under 100 draws. Rounded corners are costly, so keep corner detail low on small parts. Looking straight down hides front doors and the van's badge. On the test page, hand-offs were easy to land but front-door deliveries were not, and the view was too narrow to watch a pizza land.
-- **For Phase 6:** on iPhone, audio resumes a moment after the first tap. Wait for the resume before scheduling the first sound.
+- **For Phase 8:** on iPhone, audio resumes a moment after the first tap. Wait for the resume before scheduling the first sound.

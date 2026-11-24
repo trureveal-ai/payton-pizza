@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-Planned for v0.4.0 (Phase 4, 3D world and rides): the finished look for the street, houses, props, traffic, the shop and the rides; day and dusk; a low-effects setting. Asked for by Cam on 2026-11-23 and proposed for the same phase: neighborhoods that look different from week to week, and more rides in the garage.
+Planned for v0.4.0 (Phase 4, suburb, rides and the beach town): the finished look for today's suburb, its props, traffic and shop, and the four rides; neighborhoods that change each week on a four-week cycle, each with its own obstacles; the beach town as the first new one; day and dusk; a low-effects setting. Downtown and the snowy town follow in v0.5.0, and new rides in v0.6.0.
 
 ## [0.3.0] - 2026-11-23 — Deeper gameplay
 
