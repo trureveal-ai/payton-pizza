@@ -2,7 +2,7 @@
 
 An arcade pizza-delivery game for phones and keyboards. Payton rides down the street throwing pizzas: a pizza on the front door scores, and a pizza straight into the customer's hands scores more. Tips buy faster rides, from a hoverboard up to the Payton Pizza van.
 
-**Current version:** 0.3.0 · **Status:** in development, playable on the beta link · [Roadmap](ROADMAP.md)
+**Current version:** 0.4.0 · **Status:** in development, playable on the beta link · [Roadmap](ROADMAP.md)
 
 - **Beta (test copy):** https://trureveal-ai.github.io/payton-pizza/beta/
 - **Live:** https://trureveal-ai.github.io/payton-pizza/ (shows "coming soon" until v1.0.0)
@@ -24,14 +24,14 @@ An arcade pizza-delivery game for phones and keyboards. Payton rides down the st
 
 ## Features
 
-In v0.3.0:
+In v0.4.0:
 
 - A 3D street with houses on both sides and one fixed camera. Bright houses ordered; gray houses did not.
 - Front-door deliveries, hand-off bonuses with combos, and a heat bar that raises tips.
 - Aiming rings that show where a pizza thrown now would land.
 - Four rides and a garage: hoverboard, dirt bike, Gun-Metal Black Bimmer, Payton Pizza van. Each ride shrugs off more hazards than the one before.
 - Hazards: traffic, trash cans, hydrants, cones, potholes, puddles, balls, roadwork barriers, dogs, skaters, cars backing out of driveways.
-- Neighborhoods that change by week, each with its own look and obstacles (on the beta address, coming in v0.4.0): Maple Street, then the beach town with sand drifts, surfers and golf carts. Friday to Sunday are evening shifts. A low-effects switch in the pause menu helps slower phones.
+- Neighborhoods that change by week, each with its own look and obstacles: Maple Street, then the beach town with sand drifts, surfers and golf carts. Friday to Sunday are evening shifts. A low-effects switch in the pause menu helps slower phones.
 - Customers who wait on the porch, in the yard or at the curb, pace about, or give up and go inside.
 - Three lives that carry between shifts, extra-life pickups, and Continue from the day you reached.
 - Shifts by weekday that get harder, with a shift ticket at the end of each and a bonus round after Sunday. Every player gets the same street on a given day.
@@ -136,7 +136,7 @@ Versions follow [Semantic Versioning](https://semver.org). Each phase of the bui
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | Beta | Released |
 | v0.2.0 | 2 | 3D core and controls | Beta | Released |
 | v0.3.0 | 3 | Deeper gameplay | Beta | Released |
-| v0.4.0 | 4 | Suburb and rides finished, neighborhoods by week, beach town | Beta | Planned |
+| v0.4.0 | 4 | Suburb and rides finished, neighborhoods by week, beach town | Beta | Released |
 | v0.5.0 | 5 | Downtown and the snowy town | Beta | Planned |
 | v0.6.0 | 6 | New rides | Beta | Planned |
 | v0.7.0 | 7 | Characters and polish | Beta | Planned |
@@ -154,6 +154,7 @@ Releases are automatic: when `VERSION` changes on `main`, the release workflow r
 
 See [CHANGELOG.md](CHANGELOG.md).
 
+- **0.4.0:** neighborhoods that change by week, the beach town with sand drifts, surfers and golf carts, a finished suburb and rides, evening shifts, a lower camera, a slightly slower street, and a low-effects switch.
 - **0.3.0:** Continue, extra lives, ride perks, new customers and hazards, dogs that chase from the side and can be stopped with a pizza, a bonus round after Sunday, and an easier week.
 - **0.2.0:** the game moved to a 3D street with one fixed camera, seeded streets, forgiving tap-to-throw, aiming rings and the Gun-Metal Black Bimmer.
 - **0.1.0:** the prototype moved into this repo, split into modules, with tests, CI, automatic releases and a beta deploy.
