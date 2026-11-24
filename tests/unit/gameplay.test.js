@@ -26,11 +26,11 @@ describe('the difficulty curve', () => {
   it('never gets easier from one day to the next, and levels off', () => {
     for (let d = 1; d < 30; d++) {
       const a = tune(d), b = tune(d + 1);
-      for (const k of ['speed', 'lots', 'order', 'side', 'road', 'ball', 'barrier']) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
+      for (const k of ['speed', 'lots', 'order', 'side', 'road', 'barrier']) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
       expect(b.carDown).toBeLessThanOrEqual(a.carDown);
       // a neighborhood's own obstacles never ease off within its week, or the next time it comes round
       const sameWeek = a.hood === b.hood, c = tune(d + 7 * HOODS.length);
-      for (const k of ['dog', 'dcar', 'sand', 'surfer']) { if (sameWeek) expect(b[k]).toBeGreaterThanOrEqual(a[k]); expect(c[k]).toBeGreaterThanOrEqual(a[k]); }
+      for (const k of ['dog', 'dcar', 'ball', 'sand', 'surfer', 'taxi', 'manhole', 'ice', 'kid']) { if (sameWeek) expect(b[k]).toBeGreaterThanOrEqual(a[k]); expect(c[k]).toBeGreaterThanOrEqual(a[k]); }
     }
     expect(tune(60).speed).toBe(tune(200).speed);
   });
@@ -385,5 +385,68 @@ describe('beach town obstacles', () => {
     start(5, 0, 5); G.opt.ghost = true; let seen = false;
     for (let i = 0; i < 2500 && G.state === 'play'; i++) { update(STEP); if (G.obs.some(o => o.type === 'cart')) seen = true; }
     expect(seen).toBe(false);
+  });
+});
+
+describe('downtown and the snowy town', () => {
+  function empty(day, ride) {
+    start(day, ride || 0); G.obs = []; G.shieldLeft = 0;
+    for (const l of G.lots) { l.cust = false; l.c = null; }
+    P.x = P.tx = 240;
+  }
+  const alone = (keep, f, max) => { let n = 0; while (G.state === 'play' && !f() && n++ < (max || 3000)) { G.obs = G.obs.filter(q => keep.includes(q.type)); update(STEP); } };
+  it('week 3 is downtown and week 4 the snowy town, each with only its own obstacles', () => {
+    expect(hoodOf(15).key).toBe('city'); expect(hoodOf(21).key).toBe('city'); expect(hoodOf(22).key).toBe('snow'); expect(hoodOf(28).key).toBe('snow'); expect(hoodOf(29).key).toBe('suburb');
+    for (let seed = 1; seed <= 4; seed++) {
+      start(18, 0, seed); let types = new Set(G.obs.map(o => o.type));
+      expect(G.hood.key).toBe('city'); for (const t of ['dog', 'ball', 'dcar', 'sand', 'surfer', 'ice', 'kid']) expect(types.has(t)).toBe(false);
+      start(25, 0, seed); types = new Set(G.obs.map(o => o.type));
+      expect(G.hood.key).toBe('snow'); for (const t of ['dog', 'ball', 'sand', 'surfer', 'taxi', 'manhole']) expect(types.has(t)).toBe(false);
+    }
+    let taxis = 0, holes = 0, ice = 0, kids = 0;
+    for (let seed = 1; seed <= 6; seed++) { start(18, 0, seed); taxis += G.obs.filter(o => o.type === 'taxi').length; holes += G.obs.filter(o => o.type === 'manhole').length; start(25, 0, seed); ice += G.obs.filter(o => o.type === 'ice').length; kids += G.obs.filter(o => o.type === 'kid').length; }
+    for (const n of [taxis, holes, ice, kids]) expect(n).toBeGreaterThan(5);
+  });
+  it('an open manhole wipes out every ride, the dirt bike included', () => {
+    for (let ride = 0; ride < 4; ride++) { empty(16, ride); G.obs.push(mk('manhole', 240, py() + 40)); alone(['manhole'], () => G.lives < START_LIVES, 200); expect(G.lives).toBe(START_LIVES - 1); }
+  });
+  it('a taxi waits at the curb, pulls out into the lane as you come up, then drives on', () => {
+    empty(16); P.x = P.tx = 300;
+    const t = Object.assign(mk('taxi', 173, py() + 900), { side: -1 }); G.obs.push(t);
+    alone(['taxi'], () => t.y - py() < 520); expect(t.x).toBe(173); expect(t.vy).toBe(0);
+    alone(['taxi'], () => t.st === 3); expect(t.x).toBe(205); expect(t.vy).toBeGreaterThan(0);
+    expect(G.lives).toBe(START_LIVES);
+  });
+  it('a bus stops and starts, and hurts every ride', () => {
+    start(16, 0, 3); let bus = null;
+    alone(['bus'], () => (bus = G.obs.find(o => o.type === 'bus')), 5000); expect(bus).toBeTruthy(); expect(bus.x).toBe(280);
+    G.opt.ghost = true; let moved = false, stopped = false;
+    for (let i = 0; i < 700 && G.obs.includes(bus); i++) { update(STEP); if (bus.vy > 0) moved = true; else stopped = true; }
+    expect(moved && stopped).toBe(true);
+    for (let ride = 0; ride < 4; ride++) { empty(16, ride); const b = Object.assign(mk('bus', 240, py() + 110), { ct: 4 }); G.obs.push(b); alone(['bus'], () => G.lives < START_LIVES, 400); expect(G.lives).toBe(START_LIVES - 1); }
+  });
+  it('ice costs no life but the ride barely steers while it is on it', () => {
+    empty(23); G.obs.push(mk('ice', 240, py() + 20)); alone(['ice'], () => G.ice > 0, 200);
+    const x0 = P.x; P.tx = 330; update(STEP); update(STEP); const onIce = P.x - x0;
+    alone(['ice'], () => G.ice <= 0, 400); const x1 = P.x; update(STEP); update(STEP);
+    expect(P.x - x1).toBeGreaterThan(onIce * 4);
+    expect(G.lives).toBe(START_LIVES); expect(G.stats.crashes).toBe(0);
+  });
+  it('a kid throws a snowball across the street as you come up; it leaves on the far side', () => {
+    empty(23); P.x = P.tx = 150;
+    const k = Object.assign(mk('kid', 358, py() + 800), { side: 1 }); G.obs.push(k);
+    alone(['kid', 'snowball'], () => k.st === 1); expect(k.y - py()).toBeLessThanOrEqual(k.at);
+    const ball = G.obs.find(o => o.type === 'snowball'); expect(ball).toBeTruthy();
+    const x0 = ball.x; steps(20); expect(ball.x).toBeLessThan(x0);
+    alone(['kid', 'snowball'], () => !G.obs.includes(ball), 400); expect(G.obs.includes(ball)).toBe(false);
+  });
+  it('a snowball wipes out the hoverboard and the dirt bike, and bounces off the Bimmer and the van', () => {
+    const hit = (ride) => { empty(23, ride); G.obs.push(Object.assign(mk('snowball', P.x, py() + 30), { vx: 0, side: 1 })); alone(['snowball'], () => G.lives < START_LIVES || G.stats.bonks > 0, 200); return G.lives < START_LIVES; };
+    expect(hit(0)).toBe(true); expect(hit(1)).toBe(true); expect(hit(2)).toBe(false); expect(hit(3)).toBe(false);
+  });
+  it('a snowplow comes down the left lane and hurts every ride', () => {
+    start(23, 0, 3); let plow = null;
+    alone(['plow'], () => (plow = G.obs.find(o => o.type === 'plow')), 5000); expect(plow).toBeTruthy(); expect(plow.x).toBe(205); expect(plow.vy).toBeLessThan(0);
+    for (let ride = 0; ride < 4; ride++) { empty(23, ride); P.x = P.tx = 205; const p = Object.assign(mk('plow', 205, py() + 120), { vy: -55 }); G.obs.push(p); steps(3); alone(['plow'], () => G.lives < START_LIVES, 400); expect(G.lives).toBe(START_LIVES - 1); }
   });
 });

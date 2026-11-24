@@ -48,7 +48,7 @@ Add these to the page address. None of them is saved.
 | Switch | What it does |
 | --- | --- |
 | `?seed=1001` | Plays that street instead of the day's own |
-| `?day=14` | Starts on that day (day 8 is the first day of the beach town). Continue is hidden and the saved Continue day is left alone |
+| `?day=14` | Starts on that day (day 8 is the first day of the beach town, 15 of downtown, 22 of the snowy town). Continue is hidden and the saved Continue day is left alone |
 | `?bonus=1` | Starts in the bonus round (the one after Sunday). Same rules as `?day` for Continue |
 | `?ride=3` | Rides that ride (0 hoverboard, 1 dirt bike, 2 Bimmer, 3 van) without owning it |
 | `?fps=1` | Shows the frame-rate readout (the F key toggles it) |

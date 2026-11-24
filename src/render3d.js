@@ -17,12 +17,16 @@ var THEMES = {
   suburb: { haze: '#cdeaff', grass: '#5fd14e', road: '#565b6e', walk: '#e3ddcb', dash: '#f5d547', under: '#9fd68a', ocean: false,
     walls: ['#f4ead2', '#e6f0f7', '#fbe3c7', '#e4efd8', '#f7dfe4', '#fff6e6'], dull: ['#cfcabb', '#c9cfd3', '#d3c8be'], porch: '#c58d4e' },
   beach: { haze: '#bfeeff', grass: '#f1dea6', road: '#6c7181', walk: '#c9a36b', dash: '#ffffff', under: '#ffe9b0', ocean: true,
-    walls: ['#ffd9c2', '#c9f0ea', '#fff3b8', '#d7e3ff', '#ffd1e1', '#ffffff'], dull: ['#e3ddd0', '#d6dde0', '#e0d6cc'], porch: '#c9a36b' }
+    walls: ['#ffd9c2', '#c9f0ea', '#fff3b8', '#d7e3ff', '#ffd1e1', '#ffffff'], dull: ['#e3ddd0', '#d6dde0', '#e0d6cc'], porch: '#c9a36b' },
+  city: { haze: '#d6e4f1', grass: '#b9b7b0', road: '#4b4f5c', walk: '#d2cfc6', dash: '#f5d547', under: '#c9c7c0', ocean: false,
+    walls: ['#b5533c', '#9c4a3a', '#c96f4a', '#d9c7a8', '#a45a52', '#c98f6a'], dull: ['#8b8580', '#7f858c', '#948a80'], porch: '#8d8f96' },
+  snow: { haze: '#e6f2ff', grass: '#f2f7fd', road: '#69707d', walk: '#dfe7f0', dash: '#ffffff', under: '#dfeaff', ocean: false,
+    walls: ['#b5764a', '#8f5b3c', '#c9895b', '#a3472e', '#d9b38c', '#7d5a44'], dull: ['#8f8a84', '#9aa0a6', '#877f78'], porch: '#8a5a35' }
 };
 var theme = THEMES.suburb, themeKey = '';
 // Evening shifts: a warm low light, lit windows in houses that ordered, glowing street lamps, and light
 // on the road ahead of the ride (the van's sign lights the street orange).
-var DUSK = { suburb: '#f6b98e', beach: '#ffb98f' }, glowMat = null, lampGlows = [], beam = null;
+var DUSK = { suburb: '#f6b98e', beach: '#ffb98f', city: '#f0b59c', snow: '#f6c6b6' }, glowMat = null, lampGlows = [], beam = null;
 // 57 degrees down: a little lower than the 62 of v0.2.0, at Cam's ask, to show more of the house fronts.
 var PITCH = 57 * Math.PI / 180, VFOV = 60, HALF_W = 11.8, BOTTOM = -0.6;
 
@@ -242,7 +246,7 @@ function rebuildStreet() {
   // nearly every house is its own shape, so last street's are thrown away; yards come in a few layouts and are kept
   for (i = 0; i < houseGeos.length; i++) houseGeos[i].dispose();
   houseGeos = []; lotObjs = []; obsMap.clear();
-  var beach = theme === THEMES.beach, hoodKey = beach ? 'beach' : 'suburb', dusk = !!G.dusk, made = {};
+  var hoodKey = G.hood && THEMES[G.hood.key] ? G.hood.key : 'suburb', beach = hoodKey === 'beach', city = hoodKey === 'city', snow = hoodKey === 'snow', dusk = !!G.dusk, made = {};
   lampGlows = [];
   for (i = 0; i < G.lots.length; i++) {
     var l = G.lots[i], left = l.side < 0, o = { l: l, house: null, yard: null, person: null, arms: null, box: null, marker: null, wins: [] };
@@ -250,13 +254,14 @@ function rebuildStreet() {
     var pair = i >> 1, f = function (k, n) { return Math.floor(l.ph * k) % n; };
     var ho = { slot: l.slot, cust: l.cust, variant: f(5, 3), roof: l.roof[0], roof2: l.roof[1],
       wall: l.cust ? theme.walls[f(7, theme.walls.length)] : theme.dull[f(7, theme.dull.length)],
-      door: l.cust ? (beach ? '#1f9bb3' : '#c2262c') : '#5a4634', porch: l.cust ? theme.porch : '#9d9d97', mat: l.cust ? '#ffd23f' : '#8b8b86' };
-    var yo = { hood: hoodKey, cust: l.cust, tree: beach ? (f(3.7, 3) ? 1 : 0) : f(3.7, 4), fence: !beach && f(11, 3) === 0, lamp: (pair + (left ? 0 : 2)) % 4 === 0, prop: f(13, 5) };
+      door: l.cust ? (beach ? '#1f9bb3' : city ? '#2d6a4f' : '#c2262c') : '#5a4634', porch: l.cust ? theme.porch : '#9d9d97', mat: l.cust ? '#ffd23f' : '#8b8b86' };
+    var yo = { hood: hoodKey, cust: l.cust, tree: beach || snow ? (f(3.7, 3) ? 1 : 0) : city ? f(3.7, 2) : f(3.7, 4), fence: hoodKey === 'suburb' && f(11, 3) === 0, lamp: (pair + (left ? 0 : 2)) % 4 === 0, prop: f(13, 5) };
     if (yo.prop > 3) yo.prop = 0;
     var hk = [ho.roof, ho.cust, ho.slot, ho.variant, ho.wall].join('|'), hg = made[hk];
     if (!hg) {
       M.panes(dusk ? (l.cust ? '#ffe08a' : '#4f5d7a') : null);   // in the evening the houses that ordered have their lights on
-      hg = made[hk] = beach ? M.beachHouseGeo(ho) : M.houseGeo(ho); houseGeos.push(hg);
+      if (snow) { ho.roof2 = ho.roof; ho.roof = l.cust ? '#f6f9ff' : '#e3e9f1'; }   // snow on every roof; the shutters keep the house's colour
+      hg = made[hk] = beach ? M.beachHouseGeo(ho) : city ? M.cityHouseGeo(ho) : M.houseGeo(ho); houseGeos.push(hg);
     }
     o.house = mesh(hg);
     o.house.receiveShadow = true;
@@ -331,6 +336,13 @@ function makeObs(o) {
   else if (t === 'barrier') g.add(mesh(cached('barrier', M.barrierGeo)));
   else if (t === 'sand') g.add(mesh(cached('sand', M.sandGeo), toon, false));
   else if (t === 'surfer') { g.add(mesh(cached('surfer|' + o.col + o.board, function () { return M.surferGeo(o.col, o.board); }))); g.rotation.y = o.side > 0 ? Math.PI : 0; }
+  else if (t === 'taxi') { m = mesh(cached('taxi', M.taxiGeo)); m.scale.setScalar(0.74); g.add(m); }
+  else if (t === 'bus') { m = mesh(cached('bus|' + o.col, function () { return M.busGeo(o.col); })); m.scale.setScalar(0.74); g.add(m); }
+  else if (t === 'manhole') g.add(mesh(cached('manhole', M.manholeGeo), toon, false));
+  else if (t === 'ice') g.add(mesh(cached('ice', M.iceGeo), toon, false));
+  else if (t === 'kid') { m = mesh(cached('kid|' + o.col, function () { return M.kidGeo(o.col); })); m.scale.setScalar(0.78); g.add(m); g.rotation.y = o.side > 0 ? Math.PI : 0; }
+  else if (t === 'snowball') g.add(mesh(cached('snowball', M.snowballGeo)));
+  else if (t === 'plow') { m = mesh(cached('plow', M.plowGeo)); m.scale.setScalar(0.78); g.add(m); g.rotation.y = Math.PI; }
   else if (t === 'cart') { m = mesh(cached('cart|' + o.col, function () { return M.cartGeo(o.col); })); m.scale.setScalar(0.92); g.add(m); }
   else if (t === 'ball') g.add(mesh(cached('ball|' + o.col, function () { return M.ballGeo(o.col); })));
   else if (t === 'life') {
@@ -381,6 +393,7 @@ function syncObs() {
     }
     else if (o.type === 'skater') g.rotation.y = Math.PI + Math.cos(o.t * 3) * 0.2;
     else if (o.type === 'surfer') y = o.st === 1 ? Math.abs(Math.sin(o.t * 9)) * 0.07 : 0;
+    else if (o.type === 'snowball') { y = 0.9 + Math.sin(Math.min(1, Math.abs(o.x - (o.side < 0 ? 122 : 358)) / 236) * Math.PI) * 0.7; g.rotation.x = o.t * 8; }
     else if (o.type === 'cart') g.rotation.y = -Math.cos(o.t * 0.9 + o.ph) * 0.18;   // it leans the way it drifts
     g.position.set(X(o.x), y, Z(o.y));
   }

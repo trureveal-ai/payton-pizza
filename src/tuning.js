@@ -9,7 +9,7 @@ function ramp(base, perDay, d, cap) { return Math.min(base + perDay * d, cap); }
 // neighborhood are switched on only there; `n` is the day of the week (1 to 7), so a neighborhood's
 // own obstacles start gently on its Monday.
 export function tune(d) {
-  var hood = hoodOf(d).key, suburb = hood === 'suburb', beach = hood === 'beach', n = (d - 1) % 7 + 1, wk = weekOf(d);
+  var hood = hoodOf(d).key, suburb = hood === 'suburb', beach = hood === 'beach', city = hood === 'city', snow = hood === 'snow', n = (d - 1) % 7 + 1, wk = weekOf(d);
   return {
     hood: hood,
     // How fast the street scrolls. Slowed twice at Cam's ask: v0.2.0 was 185 + 13 a day up to 320, v0.3.0
@@ -20,11 +20,17 @@ export function tune(d) {
     side: ramp(0.14, 0.025, d, 0.45),                 // a bin or hydrant on each sidewalk, per lot
     road: ramp(0.08, 0.022, d, 0.36),                 // a cone, pothole or puddle on the road, per lot
     dog: suburb && d >= 3 ? ramp(0.03, 0.018, d - 2, 0.22) : 0, // suburb: dogs, from the first Wednesday
-    dcar: d >= 4 ? ramp(0.03, 0.015, d - 3, 0.18) * (suburb ? 1 : 0.4) : 0, // cars backing out, from the first Thursday; mostly a suburb thing
+    dcar: d >= 4 ? ramp(0.03, 0.015, d - 3, 0.18) * (suburb ? 1 : city ? 0 : 0.4) : 0, // cars backing out, from the first Thursday; mostly a suburb thing
     sand: beach ? ramp(0.1, 0.02, n, 0.24) : 0,       // beach town: a sand drift on the road, per lot
     surfer: beach ? ramp(0.03, 0.014, n + 2 * (wk - 2), 0.16) : 0, // beach town: a surfer carrying a board across the street
     cart: beach ? [Math.max(4.5, 9 - 0.5 * n), Math.max(8, 13 - 0.5 * n)] : null, // beach town: seconds between golf carts
-    ball: d >= 3 ? ramp(0.03, 0.01, d - 2, 0.14) : 0, // a ball rolling across the street
+    ball: (suburb || beach) && d >= 3 ? ramp(0.03, 0.01, d - 2, 0.14) : 0, // suburb and beach: a ball rolling across the street
+    taxi: city ? ramp(0.07, 0.016, n, 0.18) : 0,      // downtown: a taxi parked at the curb that pulls out as you come up
+    manhole: city ? ramp(0.07, 0.016, n, 0.18) : 0,   // downtown: an open manhole in the road
+    bus: city ? [Math.max(5, 9 - 0.5 * n), Math.max(8, 13 - 0.5 * n)] : null, // downtown: seconds between buses, which stop and start
+    ice: snow ? ramp(0.1, 0.022, n, 0.26) : 0,        // snowy town: a patch of ice on the road
+    kid: snow ? ramp(0.07, 0.018, n, 0.2) : 0,       // snowy town: a kid at the curb with a snowball
+    plow: snow ? [Math.max(5, 9 - 0.5 * n), Math.max(8, 13 - 0.5 * n)] : null, // snowy town: seconds between snowplows coming down the street
     barrier: d >= 5 ? ramp(0.03, 0.008, d - 5, 0.1) : 0, // a roadwork barrier across one lane
     carDown: Math.max(2.0, 5.2 - 0.25 * d),           // seconds between oncoming cars, at least
     carUp: Math.max(3.0, 7 - 0.3 * d),                // seconds between slow cars ahead, at least

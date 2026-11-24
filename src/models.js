@@ -79,8 +79,9 @@ function frontParts(p, o, deck) {
   p.push(part(blob(0.07), '#ffd23f', [0.2, 1.05, zs - 0.4]));
   p.push(part(blob(0.09), '#fff6c9', [0.14, 2.3, zs + 0.98]));
   if (!deck) p.push(part(box(1.05, 0.22, 2.1, 0.06), o.porch, [0.52, 0.11, zs]));
+  else if (deck === 'city') p.push(part(bx(0.5, 0.14, 1.6), '#8d8f96', [0.3, 0.07, zs]));
   p.push(part(box(0.56, 0.05, 1.1, 0.02), o.mat, [0.6, 0.235, zs]));
-  p.push(part(bx(0.68, 0.07, 0.7), deck ? '#e9d7a3' : '#d8d2c0', [1.38, 0.035, zs]));
+  p.push(part(bx(0.68, 0.07, 0.7), deck === 'city' ? '#c9c7c0' : deck ? '#e9d7a3' : '#d8d2c0', [1.38, 0.035, zs]));
   p.push(part(bx(0.09, 0.8, 0.09), '#f4f6fa', [1.5, 0.4, zs + 1.4]));
   p.push(part(box(0.26, 0.24, 0.44, 0.08), o.cust ? '#2f6fd6' : '#8d939e', [1.5, 0.86, zs + 1.4]));
   for (i = 0; i < 3; i++) if (i !== o.slot) {
@@ -139,12 +140,46 @@ export function beachHouseGeo(o) {
   p.push(part(bx(5.5, 0.06, 1.5), '#e3d2a2', [-1.05, 0.03, 4.3]));
   return merge(p);
 }
+// Downtown: a flat-roofed block of two, three or four storeys with a parapet, a sign band over the
+// ground floor, and something different on each roof.
+export function cityHouseGeo(o) {
+  var p = [], i, f, v = o.variant | 0, hh = [5.4, 6.8, 8.2][v];
+  p.push(part(box(4.1, hh, 6.5, 0.1), o.wall, [-2.05, hh / 2, 0]));
+  p.push(part(bx(4.3, 0.3, 6.7), o.roof2, [-2.05, hh + 0.15, 0])); p.push(part(bx(3.7, 0.06, 6.1), '#6b6f7a', [-2.05, hh + 0.31, 0]));
+  p.push(part(bx(0.12, 0.42, 6.3), o.roof, [0.05, 2.78, 0]));
+  for (f = 0; 3.7 + f * 1.4 < hh - 0.5; f++) for (i = 0; i < 3; i++) {
+    p.push(part(bx(0.1, 1.0, 1.2), WHITE, [0.04, 3.7 + f * 1.4, SLOT_Z[i]])); p.push(part(bx(0.12, 0.8, 1.0), PANE, [0.06, 3.7 + f * 1.4, SLOT_Z[i]]));
+  }
+  p.push(part(box(0.9, 0.5, 0.9, 0.06), '#d9dde4', [-3.0, hh + 0.58, -2.2])); p.push(part(cyl(0.3, 0.06, 8), '#aab2bd', [-3.0, hh + 0.86, -2.2]));
+  if (v === 2) {   // a water tank on legs
+    p.push(part(cyl(0.7, 1.2, 10), '#8a5a35', [-1.6, hh + 1.5, 1.8])); p.push(part(cone(0.8, 0.5, 10), '#5d3323', [-1.6, hh + 2.35, 1.8]));
+    for (i = 0; i < 4; i++) p.push(part(bx(0.08, 0.6, 0.08), '#4a4f5c', [-1.6 + (i % 2 ? 0.45 : -0.45), hh + 0.6, 1.8 + (i < 2 ? 0.45 : -0.45)]));
+  } else if (v === 1) p.push(part(bx(1.3, 0.2, 1.8), PANE, [-1.7, hh + 0.42, 1.6]));   // a skylight
+  else { p.push(part(bx(1.6, 0.3, 0.5), '#8a5a35', [-1.6, hh + 0.46, 2.2])); p.push(part(blob(0.35), '#35b84e', [-2.0, hh + 0.8, 2.2])); p.push(part(blob(0.3), '#4fd063', [-1.2, hh + 0.78, 2.2])); }   // a roof garden
+  frontParts(p, o, 'city');
+  return merge(p);
+}
 // What stands in a yard. Kept apart from the house so the few yard layouts can be shared by every house.
 // tree: 0 bushes, 1 round tree, 2 pine, 3 blossom tree (beach: 0 beach grass, otherwise a palm).
 // prop: 1 flamingos, 2 paddling pool, 3 bird bath (beach: 1 umbrella and towel, 2 sandcastle, 3 boards in the sand).
 export function yardGeo(o) {
   var p = [], j;
-  if (o.hood === 'beach') {
+  if (o.hood === 'city') {   // tree: 1 a street tree in a planter, 0 a bench. prop: 1 a newspaper box, 2 a bike rack, 3 a cafe table
+    if (o.tree) { p.push(part(box(1.0, 0.4, 1.0, 0.06), '#8d8f96', [0.9, 0.2, -4.4])); p.push(part(cyl(0.12, 1.6, 6), '#7d5a36', [0.9, 1.1, -4.4])); p.push(part(ball(0.85), '#3fae5a', [0.9, 2.4, -4.4])); }
+    else { p.push(part(bx(0.4, 0.08, 1.5), '#8a5a35', [0.6, 0.45, -4.4])); p.push(part(bx(0.08, 0.5, 1.5), '#8a5a35', [0.42, 0.7, -4.4])); p.push(part(bx(0.3, 0.4, 0.08), '#4a4f5c', [0.6, 0.2, -5.0])); p.push(part(bx(0.3, 0.4, 0.08), '#4a4f5c', [0.6, 0.2, -3.8])); }
+    if (o.prop === 1) { p.push(part(box(0.45, 0.9, 0.45, 0.05), '#2f6fd6', [1.1, 0.45, 3.9])); p.push(part(bx(0.3, 0.25, 0.04), '#ffffff', [1.33, 0.6, 3.9])); }
+    else if (o.prop === 2) for (j = 0; j < 3; j++) { p.push(part(bx(0.05, 0.6, 0.05), '#aab2bd', [1.1, 0.3, 3.5 + j * 0.4])); p.push(part(bx(0.05, 0.05, 0.4), '#aab2bd', [1.1, 0.6, 3.5 + j * 0.4])); }
+    else if (o.prop === 3) { p.push(part(cyl(0.4, 0.06, 10), WHITE, [0.9, 0.75, 4.0])); p.push(part(cyl(0.05, 0.75, 6), '#4a4f5c', [0.9, 0.38, 4.0])); p.push(part(cyl(0.16, 0.45, 8), '#d7263d', [0.9, 0.22, 4.6])); p.push(part(cyl(0.16, 0.45, 8), '#d7263d', [0.9, 0.22, 3.4])); }
+  } else if (o.hood === 'snow') {   // tree: a pine with snow on it, or a snowdrift. prop: 1 a snowman, 2 a sled, 3 a woodpile
+    if (o.tree) {
+      p.push(part(cyl(0.16, 1.0, 6), '#7d5a36', [-2.3, 0.5, -4.35]));
+      p.push(part(cone(1.15, 1.5, 8), '#2c8f52', [-2.3, 1.6, -4.35])); p.push(part(cone(0.9, 1.3, 8), '#34a05c', [-2.3, 2.5, -4.35])); p.push(part(cone(0.62, 1.1, 8), '#f4f8ff', [-2.3, 3.3, -4.35]));
+      p.push(part(cone(0.95, 0.3, 8), '#f4f8ff', [-2.3, 2.05, -4.35]));
+    } else { p.push(part(blob(0.8), '#ffffff', [-1.3, 0.2, -4.4], null, [1.4, 0.6, 1])); p.push(part(blob(0.5), '#e6eef8', [-0.3, 0.15, -4.6], null, [1.2, 0.6, 1])); }
+    if (o.prop === 1) { p.push(part(ball(0.42), WHITE, [0.9, 0.4, -4.3])); p.push(part(ball(0.3), WHITE, [0.9, 0.98, -4.3])); p.push(part(cone(0.06, 0.26, 5), '#ff7a1a', [1.12, 1.0, -4.3], [0, 0, -HALF])); p.push(part(cyl(0.2, 0.2, 8), '#22242c', [0.9, 1.32, -4.3])); }
+    else if (o.prop === 2) { p.push(part(bx(0.5, 0.08, 1.1), '#d7263d', [0.9, 0.2, -4.3])); p.push(part(bx(0.06, 0.12, 1.2), '#8a5a35', [0.7, 0.08, -4.3])); p.push(part(bx(0.06, 0.12, 1.2), '#8a5a35', [1.1, 0.08, -4.3])); }
+    else if (o.prop === 3) for (j = 0; j < 5; j++) p.push(part(cyl(0.14, 1.0, 6), j % 2 ? '#8a5a35' : '#a67c4d', [0.9, 0.14 + (j > 2 ? 0.26 : 0), -4.6 + (j > 2 ? (j - 3) * 0.3 + 0.15 : j * 0.3)], [0, 0, HALF]));
+  } else if (o.hood === 'beach') {
     if (o.tree) {
       for (j = 0; j < 4; j++) p.push(part(cyl(0.2 - j * 0.02, 0.85, 6), j % 2 ? '#b98f5e' : '#a67c4d', [-2.3 + j * 0.14, 0.42 + j * 0.8, -4.35]));
       for (j = 0; j < 6; j++) p.push(part(bx(1.7, 0.06, 0.46), j % 2 ? '#2fae5a' : '#3cc46b', [-1.75 + Math.cos(j * 1.047) * 0.8, 3.45, -4.35 + Math.sin(j * 1.047) * 0.8], [0, -j * 1.047, -0.38]));
@@ -291,6 +326,40 @@ export function cartGeo(col) {
   for (var a = -1; a <= 1; a += 2) for (var b = -1; b <= 1; b += 2) { p.push(part(bx(0.06, 1.1, 0.06), '#d9dde4', [a * 0.56, 1.32, b * 0.86])); p.push(part(cyl(0.24, 0.2, 10), '#22242c', [a * 0.62, 0.24, b * 0.7], [0, 0, HALF])); }
   return merge(p);
 }
+// ---------- downtown ----------
+export function taxiGeo() {
+  return merge([carGeo('#ffcc1f'), part(box(0.6, 0.2, 0.26, 0.05), WHITE, [0, 1.62, 0.15]), part(bx(1.78, 0.14, 1.2), '#1c1c24', [0, 0.66, 0.1])]);
+}
+// a city bus, nose toward -z
+export function busGeo(col) {
+  var p = [part(box(2.0, 1.9, 6.0, 0.2, 2), col, [0, 1.3, 0]), part(bx(2.04, 0.62, 5.2), '#bfe6ff', [0, 1.75, 0.1]), part(box(1.9, 0.12, 5.7, 0.05), WHITE, [0, 2.28, 0]),
+    part(bx(1.7, 0.8, 0.06), '#1c1c24', [0, 1.6, -3.0]), part(bx(1.2, 0.2, 0.07), '#ffd23f', [0, 2.08, -3.0]),
+    part(bx(0.4, 0.2, 0.08), '#fff6c9', [-0.65, 0.75, -3.0]), part(bx(0.4, 0.2, 0.08), '#fff6c9', [0.65, 0.75, -3.0]),
+    part(bx(0.5, 0.26, 0.08), '#ff3b30', [-0.6, 0.9, 3.0]), part(bx(0.5, 0.26, 0.08), '#ff3b30', [0.6, 0.9, 3.0])];
+  for (var a = -1; a <= 1; a += 2) for (var b = -1; b <= 1; b += 2) p.push(part(cyl(0.46, 0.34, 12), '#22242c', [a * 0.9, 0.46, b * 1.9], [0, 0, HALF]));
+  return merge(p);
+}
+export function manholeGeo() {
+  return merge([part(cyl(0.7, 0.02, 14), '#ff7a1a', [0, 0.01, 0]), part(cyl(0.55, 0.03, 14), '#0c0d10', [0, 0.02, 0]), part(cyl(0.5, 0.07, 12), '#6b6f7a', [0.75, 0.035, 0.4]),
+    part(bx(0.6, 0.02, 0.06), '#4a4f5c', [0.75, 0.075, 0.4]), part(bx(0.06, 0.02, 0.6), '#4a4f5c', [0.75, 0.075, 0.4])]);
+}
+// ---------- snowy town ----------
+export function iceGeo() {
+  return merge([part(cyl(1.5, 0.03, 14), '#cfeaff', [0, 0.015, 0], null, [1, 1, 0.83]), part(cyl(1.0, 0.035, 12), '#e9f7ff', [-0.2, 0.02, 0.1], null, [1, 1, 0.7]),
+    part(bx(1.1, 0.04, 0.05), WHITE, [0.2, 0.04, -0.4], [0, 0.5, 0]), part(bx(0.8, 0.04, 0.05), WHITE, [-0.4, 0.04, 0.4], [0, 0.4, 0])]);
+}
+// a kid in a bobble hat, facing +x, with an arm back to throw
+export function kidGeo(coat) {
+  return merge([personGeo(coat, '#f2c9a0', '#3b2a1a', '#3a5a8c'), part(box(0.56, 0.24, 0.6, 0.1), '#d7263d', [0, 1.8, 0]), part(blob(0.14), WHITE, [0, 2.02, 0]),
+    part(box(0.16, 0.5, 0.16, 0.06), coat, [0.05, 1.3, 0.42], [0, 0, 0.6]), part(blob(0.16), WHITE, [-0.12, 1.62, 0.42])]);
+}
+export function snowballGeo() { return part(ball(0.24), WHITE, [0, 0, 0]); }
+// a snowplow, nose toward -z: an orange truck with a wide yellow blade and a beacon
+export function plowGeo() {
+  return merge([truckGeo('#ff8a1e'), part(box(2.9, 1.0, 0.3, 0.08), '#ffd23f', [0, 0.55, -2.25], [0.2, 0, 0]), part(bx(0.3, 0.3, 0.6), '#4a4f5c', [-0.6, 0.6, -1.95]), part(bx(0.3, 0.3, 0.6), '#4a4f5c', [0.6, 0.6, -1.95]),
+    part(cyl(0.14, 0.2, 8), '#ffb000', [0, 1.78, -0.55]), part(blob(0.9), WHITE, [0, 0.4, -2.75], null, [1.5, 0.5, 0.5])]);
+}
+
 // a pickup truck, for variety in traffic
 export function truckGeo(color) {
   var p = [part(box(1.8, 0.62, 3.7, 0.2, 2), color, [0, 0.66, 0]), part(box(1.56, 0.66, 1.4, 0.2, 2), '#bfe6ff', [0, 1.22, -0.55]), part(box(1.62, 0.12, 1.46, 0.05), color, [0, 1.58, -0.55]),
