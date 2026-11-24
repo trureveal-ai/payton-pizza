@@ -3,6 +3,7 @@ import { DOG_ALERT, DOG_CHASE, DOG_JUMP, H, MAX_LIVES, START_LIVES, STEP, VEH } 
 import { G, P } from '../../src/state.js';
 import { save } from '../../src/save.js';
 import { tune } from '../../src/tuning.js';
+import { HOODS, hoodOf, weekOf } from '../../src/hoods.js';
 import { mk } from '../../src/world.js';
 import { aimAt, continueRun, dogOn, endShift, nextShift, startRun, throwPizza, update } from '../../src/game.js';
 
@@ -25,8 +26,11 @@ describe('the difficulty curve', () => {
   it('never gets easier from one day to the next, and levels off', () => {
     for (let d = 1; d < 30; d++) {
       const a = tune(d), b = tune(d + 1);
-      for (const k of ['speed', 'lots', 'order', 'side', 'road', 'dog', 'dcar', 'ball', 'barrier']) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
+      for (const k of ['speed', 'lots', 'order', 'side', 'road', 'ball', 'barrier']) expect(b[k]).toBeGreaterThanOrEqual(a[k]);
       expect(b.carDown).toBeLessThanOrEqual(a.carDown);
+      // a neighborhood's own obstacles never ease off within its week, or the next time it comes round
+      const sameWeek = a.hood === b.hood, c = tune(d + 7 * HOODS.length);
+      for (const k of ['dog', 'dcar', 'sand', 'surfer']) { if (sameWeek) expect(b[k]).toBeGreaterThanOrEqual(a[k]); expect(c[k]).toBeGreaterThanOrEqual(a[k]); }
     }
     expect(tune(60).speed).toBe(tune(200).speed);
   });
@@ -314,5 +318,72 @@ describe('dogs', () => {
   it('the van still bounces dogs off without a pizza', () => {
     const o = dog(3); until(() => o.out || G.lives < START_LIVES);
     expect(o.out).toBe(true); expect(G.lives).toBe(START_LIVES);
+  });
+});
+
+describe('neighborhoods', () => {
+  it('change each week and come round again', () => {
+    expect(hoodOf(1).key).toBe('suburb'); expect(hoodOf(7).key).toBe('suburb');
+    expect(hoodOf(8).key).toBe('beach'); expect(hoodOf(14).key).toBe('beach');
+    expect(hoodOf(7 * HOODS.length + 1).key).toBe('suburb');
+    expect(weekOf(1)).toBe(1); expect(weekOf(8)).toBe(2); expect(weekOf(15)).toBe(3);
+  });
+  it('each has its own obstacles: no sand, surfers or carts in the suburb, no dogs at the beach', () => {
+    for (let d = 1; d <= 7; d++) { const t = tune(d); expect([t.sand, t.surfer, t.cart]).toEqual([0, 0, null]); }
+    for (let d = 8; d <= 14; d++) { const t = tune(d); expect(t.dog).toBe(0); expect(t.sand).toBeGreaterThan(0); expect(t.surfer).toBeGreaterThan(0); expect(t.cart).not.toBeNull(); }
+    start(5, 0, 77); expect(G.hood.key).toBe('suburb'); expect(G.obs.some(o => ['sand', 'surfer', 'cart'].includes(o.type))).toBe(false);
+    let sand = 0, surfers = 0;
+    for (let seed = 1; seed <= 6; seed++) { start(11, 0, seed); expect(G.hood.key).toBe('beach'); expect(G.obs.some(o => o.type === 'dog')).toBe(false); sand += G.obs.filter(o => o.type === 'sand').length; surfers += G.obs.filter(o => o.type === 'surfer').length; }
+    expect(sand).toBeGreaterThan(6); expect(surfers).toBeGreaterThan(3);
+  });
+  it('a beach street is the same every time for the same day', () => {
+    start(9, 0, 31); const a = JSON.stringify(G.obs.map(o => [o.type, o.x, o.y]));
+    start(9, 0, 31); expect(JSON.stringify(G.obs.map(o => [o.type, o.x, o.y]))).toBe(a);
+  });
+});
+
+describe('beach town obstacles', () => {
+  function empty(ride) {
+    start(9, ride || 0); G.obs = []; G.shieldLeft = 0;
+    for (const l of G.lots) { l.cust = false; l.c = null; }
+    P.x = P.tx = 240;
+  }
+  const alone = (keep, f, max) => { let n = 0; while (G.state === 'play' && !f() && n++ < (max || 3000)) { G.obs = G.obs.filter(q => q.type === keep); update(STEP); } };
+  it('sand slows the ride while it is in it, and costs no life', () => {
+    empty(); steps(2); const free = G.speed;
+    G.obs.push(mk('sand', 240, py() + 30)); alone('sand', () => G.sand > 0);
+    update(STEP); expect(G.speed).toBeLessThan(free * 0.7);
+    alone('sand', () => G.sand <= 0); update(STEP);
+    expect(G.speed).toBeGreaterThan(free * 0.9);
+    expect(G.lives).toBe(START_LIVES); expect(G.stats.crashes).toBe(0);
+  });
+  it('a surfer waits at the curb, then carries the board across when you get close', () => {
+    empty(); P.x = P.tx = 150;
+    const s = Object.assign(mk('surfer', 358, py() + 900), { side: 1 }); G.obs.push(s);
+    alone('surfer', () => s.y - py() < 500); expect(s.x).toBe(358);
+    alone('surfer', () => s.st === 1); steps(30); expect(s.x).toBeLessThan(358);
+    alone('surfer', () => !G.obs.includes(s)); expect(G.lives).toBe(START_LIVES);   // it reached the far curb and left
+  });
+  it('a surfer in your way wipes you out on every ride, the van included', () => {
+    for (let ride = 0; ride < 4; ride++) {
+      empty(ride); const s = Object.assign(mk('surfer', P.x, py() + 40), { side: 1, st: 2 }); G.obs.push(s);
+      alone('surfer', () => G.lives < START_LIVES, 120); expect(G.lives).toBe(START_LIVES - 1);
+    }
+  });
+  it('golf carts turn up at the beach, drift from lane to lane, and hurt every ride', () => {
+    start(9, 0, 5); let cart = null;
+    alone('cart', () => (cart = G.obs.find(o => o.type === 'cart')), 4000); expect(cart).toBeTruthy();
+    const xs = []; for (let i = 0; i < 400 && G.obs.includes(cart); i++) { G.opt.ghost = true; update(STEP); xs.push(cart.x); }
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(50);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(198); expect(Math.max(...xs)).toBeLessThanOrEqual(282);
+    for (let ride = 0; ride < 4; ride++) {
+      empty(ride); const c = Object.assign(mk('cart', 240, py() + 60), { ph: 0, t: 0 }); G.obs.push(c); P.x = P.tx = 240;
+      alone('cart', () => G.lives < START_LIVES || !G.obs.includes(c), 600); expect(G.lives).toBe(START_LIVES - 1);
+    }
+  });
+  it('no golf carts in the suburb', () => {
+    start(5, 0, 5); G.opt.ghost = true; let seen = false;
+    for (let i = 0; i < 2500 && G.state === 'play'; i++) { update(STEP); if (G.obs.some(o => o.type === 'cart')) seen = true; }
+    expect(seen).toBe(false);
   });
 });

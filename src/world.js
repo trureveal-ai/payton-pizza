@@ -20,6 +20,9 @@ export function mk(type,x,y){
   else if(type==='puddle'){o.w=30;o.h=18;}
   else if(type==='ball'){o.w=14;o.h=14;o.col=pick(['#ff3b4e','#3d7fd9','#ffd23f']);}
   else if(type==='barrier'){o.w=64;o.h=16;}
+  else if(type==='sand'){o.w=56;o.h=44;}
+  else if(type==='surfer'){o.w=40;o.h=14;o.col=pick(SHIRT);o.board=pick(['#ff5a5f','#ffd23f','#3ec1d3','#ffffff']);}
+  else if(type==='cart'){o.w=22;o.h=34;o.col=pick(['#ff7a59','#3ec1d3','#ffd23f','#7bd389']);}
   return o;
 }
 // Customer types: 'porch' waits at the door, 'yard' stands beside it, 'pacer' walks up and down,
@@ -51,6 +54,8 @@ export function buildShift(d){
     if(t.dcar&&chance(t.dcar)){s=chance(0.5)?-1:1;o=mk('dcar',s<0?74:406,y+19);o.side=s;G.obs.push(o);}
     if(t.ball&&chance(t.ball)){s=chance(0.5)?-1:1;o=mk('ball',s<0?120:360,y+rnd(40,170));o.side=s;G.obs.push(o);}
     if(t.barrier&&i>2&&chance(t.barrier))G.obs.push(mk('barrier',chance(0.5)?200:280,y+rnd(30,180)));
+    if(t.sand&&chance(t.sand))G.obs.push(mk('sand',rnd(190,290),y+rnd(0,LOT)));
+    if(t.surfer&&i>1&&chance(t.surfer)){s=chance(0.5)?-1:1;o=mk('surfer',s<0?122:358,y+rnd(40,170));o.side=s;G.obs.push(o);}
     if(i%t.pickupEvery===1)G.obs.push(mk('pickup',rnd(152,328),y+rnd(20,190)));
     y+=LOT;
   }

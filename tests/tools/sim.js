@@ -69,9 +69,11 @@ export function record(street, ghost) {
       var ox = q.x, need = (q.w + G.V.w) / 2 + 12;
       if (q.type === 'pickup') { if (G.pizzas <= G.V.cap - 3 && Math.abs(ox - lx) < 10) cost -= 0.5; continue; }
       if (q.type === 'life') { if (Math.abs(ox - lx) < 10) cost -= 0.8; continue; }
-      if (q.type === 'puddle') { if (Math.abs(ox - lx) < need) cost += 0.4 / (t + 0.1); continue; }
+      if (q.type === 'puddle' || q.type === 'sand') { if (Math.abs(ox - lx) < need) cost += 0.4 / (t + 0.1); continue; }
       if (G.V.perk.indexOf(q.type) >= 0) continue;                               // this ride shrugs it off
       if (q.type === 'ball') { ox = q.st === 1 ? q.x - q.side * 95 * t : 240; need += q.st === 1 ? 14 : 70; }
+      if (q.type === 'surfer') { ox = q.st === 1 ? q.x - q.side * 70 * t : q.x - q.side * 70 * Math.max(0, t - Math.max(0, ahead - 430) / G.speed); need += 16; }
+      if (q.type === 'cart') { ox = 240 + Math.sin((q.t + t) * 0.9 + q.ph) * 42; need += 12; }
       if (q.type === 'dcar' && q.st < 3) { ox = 240; need += 90; }
       else if (q.type === 'skater') need += 10;
       if (Math.abs(ox - lx) < need) cost += 4 / (t + 0.1);                       // it will be in this lane

@@ -1,5 +1,6 @@
 // The overlay: HUD, menu screens, pop-up words and sparks. The street itself is drawn in 3D by render3d.js.
 import { DAYS, H, MAX_LIVES, VEH, W } from './config.js';
+import { weekOf } from './hoods.js';
 import { clamp } from './util.js';
 import { G, P } from './state.js';
 import { save, writeSave } from './save.js';
@@ -105,7 +106,8 @@ export function drawHUD(){
 }
 export function drawBanner(){
   var a=clamp(G.bannerT,0,1);ctx.globalAlpha=a;
-  R(0,292,W,G.bonus?132:156,'rgba(15,16,22,0.82)');
+  R(0,268,W,G.bonus?156:180,'rgba(15,16,22,0.82)');
+  T('WEEK '+weekOf(G.day)+'  -  '+G.hood.name,W/2,290,13,'#9cf07a','center');
   if(G.bonus){
     T('PIZZA PARTY!',W/2,328,34,'#ffd23f','center','#000');
     T('BONUS ROUND  -  EVERY HOUSE ORDERED',W/2,366,14,'#fff','center');
