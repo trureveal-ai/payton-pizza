@@ -22,6 +22,7 @@ function begin(street, ghost) {
   G.opt = { seed: street.seed, day: street.day, ride: street.ride, ghost: !!ghost };
   G.keys = {}; G.tGame = 0;
   startRun();
+  if (street.lives) G.lives = street.lives;   // the measuring tool gives itself spare lives, so every street is ridden to its end
 }
 function result() {
   var s = G.stats;
@@ -49,9 +50,10 @@ export function replay(street, events, ghost) {
 // A simple automatic player. It works out when each hazard will reach it, moves to the lane with the
 // least danger, collects pizza when low and throws when the aiming mark says a pizza would land.
 // It is only here to produce inputs worth recording; it is not part of the game.
+const PASS_FROM = 70, PASS_Y = 480;   // start speeding up this far behind a slow vehicle; where on the screen to ride while passing
 export function record(street, ghost) {
   begin(street, ghost);
-  var events = [[0, 'y', 650]], guard = 0, lanes = [], lastX = null, k;
+  var events = [[0, 'y', 650]], guard = 0, lanes = [], lastX = null, lastY = 650, k;
   for (k = 138; k <= 342; k += 12) lanes.push(k);
   P.ty = 650;   // ride at the slowest speed, which leaves the most time to dodge
   var danger = function (lx, py, rate) {
@@ -78,7 +80,10 @@ export function record(street, ghost) {
       if (q.type === 'taxi' && q.st < 3) { ox = q.st === 0 ? q.x : (q.side < 0 ? 205 : 275); need += q.st === 0 ? 28 : 8; }
       if (q.type === 'bus') need += 6;
       if (q.type === 'cart') { ox = 240 + Math.sin((q.t + t) * 0.9 + q.ph) * 42; need += 12; }
-      if (q.type === 'dcar' && q.st < 3) { ox = 240; need += 90; }
+      if (q.type === 'dcar' && q.st < 3) {   // it backs out as far as the middle of the road, so its own half is closed and the other half is free
+        var edge = q.side < 0 ? 228 : 252, back = q.side < 0 ? q.x - 23 : q.x + 23;
+        ox = (edge + back) / 2; need += Math.abs(edge - back) / 2 - q.w / 2;
+      }
       else if (q.type === 'skater') need += 10;
       if (Math.abs(ox - lx) < need) cost += 4 / (t + 0.1);                       // it will be in this lane
       else if (ox > lo - need && ox < hi + need && Math.abs(ox - P.x) / rate + 0.2 > t) cost += 6 / (t + 0.1);   // it is in the way of getting there
@@ -90,6 +95,13 @@ export function record(street, ghost) {
     var best = lastX == null ? 240 : lastX, bestCost = danger(best, py, rate) - 0.4;   // stay put unless another lane is clearly safer
     for (k = 0; k < lanes.length; k++) { var c = danger(lanes[k], py, rate); if (c < bestCost) { bestCost = c; best = lanes[k]; } }
     if (best !== lastX) { events.push([G.step, 'x', best]); P.tx = best; lastX = best; }
+    // speed up to get past anything slow going the same way (a golf cart, a slow car, a bus), then drop back
+    var wantY = 650;
+    for (k = 0; k < G.obs.length; k++) {
+      var v = G.obs[k], gapY = v.y - py;
+      if (!v.out && (v.type === 'cart' || v.type === 'carU' || v.type === 'bus') && gapY > -90 && gapY < PASS_FROM) wantY = PASS_Y;
+    }
+    if (wantY !== lastY) { events.push([G.step, 'y', wantY]); P.ty = wantY; lastY = wantY; }
     if (G.throwCd <= 0 && G.pizzas > 0) for (var side = -1; side <= 1; side += 2) {
       var a = aimAt(side);
       // an order in reach, or a dog alongside to feed

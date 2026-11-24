@@ -13,23 +13,45 @@ Phase 5 (downtown and the snowy town). On the beta address for Cam's review; it 
 - **Frosty Peak, the snowy mountain town (week 4).** Snow on the ground and on every roof, wooden houses, pines with snow on them, snowdrifts, snowmen, sleds and woodpiles.
 - **Snowy town obstacles.** Ice costs no life, but the ride barely steers while it is on it. Kids at the curb throw snowballs across the street: a snowball wipes out the hoverboard and the dirt bike and bounces off the Bimmer and the van. A snowplow comes down the left-hand lane.
 - The cycle is now four weeks: Maple Street, the beach town, downtown, Frosty Peak, then round again while the difficulty keeps climbing.
-- 8 more unit tests (101 in all) for the two neighborhoods and their obstacles.
+- 11 more unit tests (104 in all) for the two neighborhoods, their obstacles and the difficulty rules.
 
 ### Changed
+- **Obstacles do the stepping up, not speed** (Cam, 2026-11-24, after asking how Paperboy does it). The street used to get a little faster every day until day 16 and then stay put, so speed and obstacles both climbed in weeks 1 and 2 and only obstacles after that. Now:
+  - **One speed per town.** Maple Street 170, the beach town 195, downtown 220, Frosty Peak 240, and 250 from the second time round. It is the same from Monday to Sunday. (It was 150 + 7 a day up to 250.) The first Monday to Wednesday are a touch faster than before and the first Friday to Sunday a touch slower.
+  - **The everyday street steps up once a week.** Bins, hydrants, cones, potholes, barriers, traffic and impatient customers still arrive day by day in week 1, as before. After that they take one step up each Monday and hold it all week; they are at their busiest from week 5. (They used to climb every day and top out by day 14, which loaded most of the difficulty onto the beach town.)
+  - **Within a week only the town's own obstacles ramp up**, from a gentle Monday to a busy Sunday. Each time a town comes round again its obstacles start further up the ramp; the third time round is as hard as the game gets.
+  - **Beach town eased:** golf carts come less often (every 11.5 to 15.5 seconds on its Monday and 8.5 to 12.5 on its Sunday; it was 8.5 to 12.5 and 5.5 to 9.5) and there are about a third fewer surfers.
+  - **Downtown stiffened a little** (about a seventh more taxis and manholes, buses a second closer together), and Frosty Peak has about a seventh more ice and its snowplows come a second closer together. Both are also slower and have a quieter everyday street than on the first Phase 5 build, where they ran at 250.
 - Balls now belong to the suburb and the beach town only.
 - `npm run measure` also covers days 17, 21, 24 and 28.
+- The automatic player drives better: it knows a car backing out closes only its own half of the road, and it speeds up to get past a golf cart, a slow car or a bus. Test streets re-recorded (`npm run record`).
 
-### Measured with the automatic player (12 streets a day, in the van)
+### Added for measuring
+- `npm run measure:weeks` rides whole streets with spare lives and prints how often the automatic player was hit, week by week and ride by ride. It is the yardstick for whether each week steps up from the last.
 
-| Day | Neighborhood | Streets finished | Crashes a street |
-| --- | --- | --- | --- |
-| 14 | Beach town, Sunday | 7 of 12 | 2.1 |
-| 17 | Downtown, Wednesday | 11 of 12 | 1.5 |
-| 21 | Downtown, Sunday | 9 of 12 | 0.9 |
-| 24 | Frosty Peak, Wednesday | 11 of 12 | 1.4 |
-| 28 | Frosty Peak, Sunday | 12 of 12 | 1.6 |
+### Measured with the automatic player
 
-By this measure the beach town is still the hardest week for the automatic player, which handles the drifting golf carts badly. It steers worse than a person, so whether the weeks climb in the right order is for Cam's playtest to say.
+Hits on a whole street, averaged over each week (12 streets a day, 84 a week, spare lives so every street is ridden to its end). "Before" is the first Phase 5 build measured with the same improved automatic player.
+
+| Week | Town | Hoverboard | Dirt bike | Bimmer | Van | All four | All four, before |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Maple Street | 1.0 | 0.4 | 0.1 | 0.0 | 0.4 | 0.4 |
+| 2 | Beach town | 3.2 | 2.1 | 0.6 | 0.6 | 1.6 | 2.7 |
+| 3 | Downtown | 4.6 | 1.8 | 1.1 | 0.8 | 2.1 | 2.7 |
+| 4 | Frosty Peak | 5.0 | 3.3 | 1.2 | 0.9 | 2.6 | 2.8 |
+| 5 | Maple Street | 5.1 | 2.8 | 1.5 | 1.0 | 2.6 | 3.7 |
+| 6 | Beach town | 6.1 | 3.7 | 1.7 | 1.6 | 3.3 | 3.9 |
+| 7 | Downtown | 6.6 | 3.2 | 2.0 | 1.7 | 3.4 | 2.6 |
+| 8 | Frosty Peak | 5.9 | 4.0 | 1.6 | 1.6 | 3.2 | 2.7 |
+
+Before, weeks 2 to 4 were level, weeks 5 and 6 were the peak and weeks 7 and 8 were easier again. Now the first time through the four towns is a steady climb (0.4, 1.6, 2.1, 2.6), and every town is harder the second time than the first. What is not a climb, and is left as it is:
+- Week 5 (back on Maple Street) is level with week 4, and weeks 6 to 8 are level with each other (3.3, 3.4, 3.2).
+- For the Bimmer and the van, Frosty Peak is no harder than downtown, because snowballs bounce off those two rides. For the hoverboard and the dirt bike it is clearly harder.
+- The step from week 1 to week 2 is the biggest. Week 1 was approved as it is, and its first three days have almost no obstacles.
+
+A normal run (three lives, the van, 12 streets a day): day 10 beach 12 of 12 finished with 0.4 crashes; day 14 beach 12 of 12, 0.9; day 17 downtown 11 of 12, 0.9; day 21 downtown 12 of 12, 0.6; day 24 Frosty Peak 12 of 12, 1.0; day 28 Frosty Peak 11 of 12, 0.9.
+
+The automatic player steers worse than a person and knows every obstacle's rule by heart (a taxi never surprises it), and a difference of 0.2 between two weeks is within the noise. Changing how it drives moved these figures about as much as the tuning did. So this shows the direction; whether the weeks feel like a steady climb is for Cam's playtest to say.
 
 ## [0.4.0] - 2026-11-24 — Suburb, rides and the beach town
 
