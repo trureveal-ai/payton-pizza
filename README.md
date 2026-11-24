@@ -37,7 +37,7 @@ In v0.3.0:
 - Touch controls and keyboard controls.
 - Bank, rides and high score saved on the device.
 
-Planned before v1.0.0: a finished look for the street, rides and people, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
+Planned before v1.0.0: a finished look for the street, rides and people, four neighborhoods that change by week (suburb, beach town, downtown, snowy mountain town), more rides, music, personal bests, install on phone, a shared leaderboard and invitation group leaderboards. See the [roadmap](ROADMAP.md).
 
 ## How it works
 
@@ -135,13 +135,15 @@ Versions follow [Semantic Versioning](https://semver.org). Each phase of the bui
 | v0.1.0 | 1 | Repo and walking skeleton (2D) | Beta | Released |
 | v0.2.0 | 2 | 3D core and controls | Beta | Released |
 | v0.3.0 | 3 | Deeper gameplay | Beta | Released |
-| v0.4.0 | 4 | 3D world and rides | Beta | Planned |
-| v0.5.0 | 5 | Characters and polish | Beta | Planned |
-| v0.6.0 | 6 | Music and sound | Beta | Planned |
-| v0.7.0 | 7 | Personal bests and install on phone | Beta | Planned |
-| v0.8.0 | 8 | Shared leaderboard | Beta | Planned |
-| v0.9.0 | 9 | Invitation group leaderboards | Beta | Planned |
-| v1.0.0 | 10 | First live release | Live | Planned |
+| v0.4.0 | 4 | Suburb and rides finished, neighborhoods by week, beach town | Beta | Planned |
+| v0.5.0 | 5 | Downtown and the snowy town | Beta | Planned |
+| v0.6.0 | 6 | New rides | Beta | Planned |
+| v0.7.0 | 7 | Characters and polish | Beta | Planned |
+| v0.8.0 | 8 | Music and sound | Beta | Planned |
+| v0.9.0 | 9 | Personal bests and install on phone | Beta | Planned |
+| v0.10.0 | 10 | Shared leaderboard | Beta | Planned |
+| v0.11.0 | 11 | Invitation group leaderboards | Beta | Planned |
+| v1.0.0 | 12 | First live release | Live | Planned |
 
 The 2D game is kept at the `v0.1.0` tag and on the `classic-2d` branch.
 
